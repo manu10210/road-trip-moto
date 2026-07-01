@@ -361,6 +361,38 @@
       .gauge-center { text-anchor:middle; }
       .gauge-val { font-size:2rem; font-weight:800; fill:var(--accent); }
       .gauge-lbl { font-size:.7rem; fill:var(--muted); }
+      /* ── Fuel : hero + simulateur interactif + feuille de route ─ */
+      .fuel-hero { background:linear-gradient(125deg, rgba(249,115,22,0.16), rgba(245,158,11,0.08) 55%, rgba(34,197,94,0.08)); border:1px solid rgba(249,115,22,0.32); position:relative; overflow:hidden; }
+      .fuel-hero::before { content:''; position:absolute; right:-40px; top:-40px; width:180px; height:180px; border-radius:50%; background:radial-gradient(circle, rgba(249,115,22,0.22), transparent 70%); pointer-events:none; }
+      .fuel-slider-row { margin:14px 0 2px; }
+      .fuel-slider-row label { display:flex; justify-content:space-between; align-items:baseline; text-transform:none; letter-spacing:0; font-size:.85rem; color:var(--text); }
+      .fuel-slider-row label b { color:var(--accent); font-size:.98rem; font-variant-numeric:tabular-nums; }
+      input[type=range].fuel-range { -webkit-appearance:none; appearance:none; width:100%; height:6px; border-radius:20px; background:var(--bg3); outline:none; padding:0; margin-top:4px; }
+      input[type=range].fuel-range::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:22px; height:22px; border-radius:50%; background:linear-gradient(135deg,#fb923c,#f59e0b); border:2px solid #fff; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.45); }
+      input[type=range].fuel-range::-moz-range-thumb { width:22px; height:22px; border-radius:50%; background:linear-gradient(135deg,#fb923c,#f59e0b); border:2px solid #fff; cursor:pointer; }
+      .fuel-sim-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); gap:10px; margin-top:16px; }
+      .fuel-sim-cell { background:var(--bg); border:1px solid var(--border); border-radius:13px; padding:13px 12px; text-align:center; transition:border-color .2s; }
+      .fuel-sim-cell.flash { border-color:rgba(245,158,11,0.55); }
+      .fuel-sim-cell .v { font-size:1.5rem; font-weight:800; line-height:1.1; font-variant-numeric:tabular-nums; background:linear-gradient(135deg,#fdba74,#fcd34d); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+      .fuel-sim-cell .l { font-size:.66rem; color:var(--muted); margin-top:5px; text-transform:uppercase; letter-spacing:.04em; }
+      .fuel-sim-note { font-size:.76rem; color:var(--muted); margin-top:11px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+      /* Feuille de route : où faire le plein le long du parcours */
+      .fuel-road { position:relative; margin:22px 4px 6px; }
+      .fuel-road-track { position:relative; height:10px; border-radius:20px; background:linear-gradient(90deg,#22c55e,#f59e0b 58%,#f97316); }
+      .fuel-road-stop { position:absolute; top:50%; transform:translate(-50%,-50%); font-size:1.15rem; filter:drop-shadow(0 2px 3px rgba(0,0,0,.55)); }
+      .fuel-road-stop .fs-km { position:absolute; top:22px; left:50%; transform:translateX(-50%); font-size:.6rem; color:var(--muted); white-space:nowrap; font-variant-numeric:tabular-nums; }
+      .fuel-road-ends { display:flex; justify-content:space-between; font-size:.72rem; color:var(--muted); margin-top:26px; }
+      .fuel-road-legend { font-size:.78rem; color:var(--muted); margin-top:12px; text-align:center; line-height:1.5; }
+      .fuel-road-legend b { color:var(--accent); }
+      /* Où faire le plein le moins cher */
+      .fuel-cheap { display:flex; align-items:center; gap:13px; background:linear-gradient(135deg, rgba(34,197,94,0.15), rgba(20,184,166,0.08)); border:1px solid rgba(34,197,94,0.36); border-radius:14px; padding:14px 16px; margin-bottom:14px; }
+      .fuel-cheap .fc-flag { font-size:2.2rem; flex:none; line-height:1; }
+      .fuel-cheap .fc-txt { flex:1; min-width:0; }
+      .fuel-cheap .fc-txt .fc-t { font-weight:800; font-size:.96rem; }
+      .fuel-cheap .fc-txt .fc-s { font-size:.76rem; color:var(--muted); margin-top:2px; }
+      .fuel-cheap .fc-txt b { color:#86efac; }
+      .fuel-cheap .fc-price { font-size:1.35rem; font-weight:800; color:#86efac; font-variant-numeric:tabular-nums; white-space:nowrap; text-align:center; line-height:1.1; }
+      .fuel-cheap .fc-price small { display:block; font-size:.6rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
       /* ── Mode Pilote (ordinateur de bord GPS) ───────────── */
       #ride-overlay { display:none; position:fixed; inset:0; z-index:500; background:radial-gradient(ellipse at 50% -10%, #26221a 0%, #030303 72%); color:var(--text); flex-direction:column; padding:16px; overflow-y:auto; }
       #ride-overlay.open { display:flex; animation:fadeIn .25s ease; }
@@ -1171,8 +1203,9 @@
       <div class="wrap">
         <div id="fuel-empty" class="empty"><span class="ic">⛽</span><p>Préparation de ton plan…</p><button class="btn btn-primary" onclick="genPlanNow(event)" style="margin-top:8px">⚡ Générer maintenant</button></div>
         <div id="fuel-content" style="display:none">
-          <div class="card">
+          <div class="card fuel-hero">
             <h2>⛽ Autonomie de ta moto</h2>
+            <p style="font-size:.82rem;color:var(--muted);margin:-2px 0 4px">Sur un plein utile, avant d'atteindre la zone de réserve.</p>
             <div class="gauge-wrap">
               <svg class="gauge-svg" viewBox="0 0 200 130">
                 <path class="gauge-track" d="M 20 115 A 80 80 0 0 1 180 115"/>
@@ -1188,10 +1221,45 @@
               <span>🔴 Réserve</span><span id="gauge-tank-info">—</span><span>🟢 Plein</span>
             </div>
           </div>
+
+          <div class="card">
+            <h2>🧮 Simulateur de coût carburant</h2>
+            <p style="font-size:.82rem;color:var(--muted);margin:-2px 0 6px">Fais glisser ta conso et le prix pour voir l'impact <strong style="color:var(--accent)">en direct</strong> sur ton voyage.</p>
+            <div class="fuel-slider-row">
+              <label>📊 Consommation <b id="sim-conso-v">—</b></label>
+              <input type="range" class="fuel-range" id="sim-conso" min="3" max="10" step="0.1" value="5.8"/>
+            </div>
+            <div class="fuel-slider-row">
+              <label>💶 Prix carburant <b id="sim-price-v">—</b></label>
+              <input type="range" class="fuel-range" id="sim-price" min="1.4" max="2.5" step="0.01" value="1.95"/>
+            </div>
+            <div class="fuel-sim-grid">
+              <div class="fuel-sim-cell"><div class="v" id="sim-budget">—</div><div class="l">💰 Budget essence</div></div>
+              <div class="fuel-sim-cell"><div class="v" id="sim-liters">—</div><div class="l">🛢️ Litres au total</div></div>
+              <div class="fuel-sim-cell"><div class="v" id="sim-range">—</div><div class="l">🛣️ Autonomie / plein</div></div>
+              <div class="fuel-sim-cell"><div class="v" id="sim-stops">—</div><div class="l">⛽ Arrêts essence</div></div>
+            </div>
+            <div class="fuel-sim-note">
+              <button class="btn btn-secondary" id="sim-reset" style="font-size:.78rem;padding:6px 13px">↩️ Valeurs de mon plan</button>
+              <span id="sim-diff"></span>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>🗺️ Où t'arrêter faire le plein</h2>
+            <p style="font-size:.82rem;color:var(--muted);margin:-2px 0 2px">Repères indicatifs sur ton parcours <span id="road-total"></span>.</p>
+            <div class="fuel-road">
+              <div class="fuel-road-track" id="fuel-road-track"></div>
+              <div class="fuel-road-ends"><span>🏁 Départ</span><span>Arrivée 🏁</span></div>
+            </div>
+            <div class="fuel-road-legend" id="fuel-road-legend"></div>
+          </div>
+
           <div class="card"><h2>Plan de ravitaillement</h2><div class="g3" id="fuel-stats"></div></div>
           <details class="fold" id="fuel-price-card" style="display:none">
             <summary>💶 Prix carburant par pays <span class="fold-sub">où faire le plein</span></summary>
             <div class="fold-body">
+            <div id="fuel-cheap-box"></div>
             <table class="fuel-table" id="fuel-price-table" style="width:100%;border-collapse:collapse;font-size:0.85rem">
               <thead><tr style="font-size:0.75rem;color:var(--muted)">
                 <th style="text-align:left;border-bottom:1px solid var(--border)">Pays</th>
@@ -2691,8 +2759,30 @@
         ];
         document.getElementById('fuel-tips').innerHTML = tips.map(t => `<li><span>⛽</span>${t}</li>`).join('');
 
-        // Fuel price comparison table
+        // ── Simulateur interactif : conso + prix → budget/litres/autonomie/arrêts ──
+        const c0 = Math.min(10, Math.max(3, f.consumptionLPer100 || 5.8));
+        const p0 = Math.min(2.5, Math.max(1.4, f.fuelPricePerLiter || 1.95));
+        _fuelSim = {
+          totalKm: p.summary.totalDistanceKm || 0,
+          tankLiters: f.tankLiters || totalTank || 18,
+          safety: f.safetyReservePercent || 12,
+          defConso: c0, defPrice: p0,
+          baseBudget: (p.summary.estimatedFuelBudget != null)
+            ? p.summary.estimatedFuelBudget
+            : (p.summary.totalDistanceKm||0) * c0 / 100 * p0
+        };
+        const sc = document.getElementById('sim-conso'), sp = document.getElementById('sim-price');
+        if (sc && sp) {
+          sc.value = c0; sp.value = p0;
+          sc.oninput = renderFuelSimUI; sp.oninput = renderFuelSimUI;
+          const rst = document.getElementById('sim-reset');
+          if (rst) rst.onclick = () => { sc.value = _fuelSim.defConso; sp.value = _fuelSim.defPrice; renderFuelSimUI(); };
+          renderFuelSimUI();
+        }
+
+        // Fuel price comparison table + « où faire le plein le moins cher »
         if (p.borderChecklist && p.borderChecklist.length) {
+          renderCheapestFuel(p.borderChecklist);
           const rows = p.borderChecklist
             .filter(c => c.fuelPriceEstimate && c.fuelPriceEstimate !== 'N/A')
             .map(c => `<tr>
@@ -2705,6 +2795,80 @@
             document.getElementById('fuel-price-card').style.display = '';
           }
         }
+      }
+
+      // Simulateur carburant : recalcule en direct depuis les curseurs conso/prix.
+      let _fuelSim = null;
+      function fuelFmtEur(n){ return Math.round(n).toLocaleString('fr-FR') + ' €'; }
+      // Extrait le prix bas d'une estimation « ≈ 1.80–2.00 €/L (95) » → 1.80.
+      // Ignore la Suisse (CHF, hors zone euro) pour une comparaison homogène.
+      function parseFuelLow(str){
+        if (!str || /CHF/.test(str)) return null;
+        const m = String(str).match(/(\d+[.,]\d+)/);
+        return m ? parseFloat(m[1].replace(',','.')) : null;
+      }
+      function renderFuelSimUI(){
+        const s = _fuelSim; if (!s) return;
+        const conso = parseFloat(document.getElementById('sim-conso').value);
+        const price = parseFloat(document.getElementById('sim-price').value);
+        document.getElementById('sim-conso-v').textContent = conso.toFixed(1).replace('.',',') + ' L/100';
+        document.getElementById('sim-price-v').textContent = price.toFixed(2).replace('.',',') + ' €/L';
+        const reserve = s.tankLiters * s.safety / 100;
+        const usable = Math.max(0.1, s.tankLiters - reserve);
+        const range = Math.max(40, Math.round(usable / conso * 100));
+        const refuelEvery = Math.max(80, Math.floor(range * 0.8));
+        const stops = Math.max(1, Math.ceil(s.totalKm / range));
+        const liters = s.totalKm * conso / 100;
+        const budget = liters * price;
+        document.getElementById('sim-budget').textContent = fuelFmtEur(budget);
+        document.getElementById('sim-liters').textContent = Math.round(liters).toLocaleString('fr-FR') + ' L';
+        document.getElementById('sim-range').textContent = range + ' km';
+        document.getElementById('sim-stops').textContent = stops;
+        const diff = budget - s.baseBudget;
+        const diffEl = document.getElementById('sim-diff');
+        if (diffEl){
+          if (Math.abs(diff) < 1) diffEl.innerHTML = '<span style="color:#86efac">✓ Coût de ton plan actuel</span>';
+          else if (diff > 0) diffEl.innerHTML = '<span style="color:#fca5a5">+' + fuelFmtEur(diff) + ' vs ton plan</span>';
+          else diffEl.innerHTML = '<span style="color:#86efac">−' + fuelFmtEur(-diff) + ' vs ton plan 🎉</span>';
+        }
+        fuelRoadmap(s.totalKm, refuelEvery, stops);
+      }
+      function fuelRoadmap(totalKm, refuelEvery, stops){
+        const track = document.getElementById('fuel-road-track');
+        if (!track || !totalKm) return;
+        // Nb de repères = arrêts intermédiaires (on ne marque pas l'arrivée).
+        const marks = [];
+        for (let km = refuelEvery; km < totalKm - refuelEvery*0.15; km += refuelEvery) marks.push(km);
+        const showKm = marks.length <= 9; // au-delà, les étiquettes se chevauchent
+        track.innerHTML = marks.map(km => {
+          const pct = (km / totalKm) * 100;
+          return '<span class="fuel-road-stop" style="left:' + pct.toFixed(1) + '%">⛽'
+            + (showKm ? '<span class="fs-km">' + Math.round(km) + '</span>' : '') + '</span>';
+        }).join('');
+        const rt = document.getElementById('road-total');
+        if (rt) rt.textContent = '(' + totalKm.toLocaleString('fr-FR') + ' km)';
+        const legend = document.getElementById('fuel-road-legend');
+        if (legend) legend.innerHTML = 'Plein conseillé tous les <b>' + refuelEvery + ' km</b> · environ <b>' + stops + ' arrêt' + (stops>1?'s':'') + '</b> essence sur le trajet.';
+      }
+      function renderCheapestFuel(borderChecklist){
+        const box = document.getElementById('fuel-cheap-box');
+        if (!box) return;
+        const cands = (borderChecklist||[])
+          .map(c => ({ c, low: parseFuelLow(c.fuelPriceEstimate) }))
+          .filter(x => x.low != null);
+        if (cands.length < 2){ box.innerHTML = ''; return; }
+        cands.sort((a,b) => a.low - b.low);
+        const best = cands[0], worst = cands[cands.length-1];
+        const tank = _fuelSim ? _fuelSim.tankLiters : 18;
+        const saveTank = (worst.low - best.low) * tank;
+        box.innerHTML = '<div class="fuel-cheap">'
+          + '<span class="fc-flag">' + best.c.flag + '</span>'
+          + '<div class="fc-txt"><div class="fc-t">Fais le plein en <b>' + famEsc(best.c.name) + '</b></div>'
+          + '<div class="fc-s">Le carburant le moins cher de ta route'
+          + (saveTank > 1 ? ' — jusqu\'à <b>~' + Math.round(saveTank) + ' €</b> économisés par plein vs le pays le plus cher' : '')
+          + '</div></div>'
+          + '<div class="fc-price">' + best.low.toFixed(2).replace('.',',') + '<small>€/L dès</small></div>'
+          + '</div>';
       }
 
       function renderBorders(p) {
