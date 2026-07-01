@@ -705,6 +705,22 @@
       .fam-kiss-row .k { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
       .fam-heart { position:fixed; pointer-events:none; z-index:99999; font-size:1.9rem; will-change:transform,opacity; animation:famHeart 1.6s ease-out forwards; }
       @keyframes famHeart { 0%{ transform:translateY(0) scale(.5) rotate(-8deg); opacity:0; } 12%{ opacity:1; } 100%{ transform:translateY(-160px) scale(1.35) rotate(8deg); opacity:0; } }
+      /* ── Prochaine étape (chip sous la position de Papa) ─ */
+      .fam-next-chip { display:inline-flex; align-items:center; gap:6px; font-size:.78rem; font-weight:700; padding:5px 12px; border-radius:20px; background:rgba(20,184,166,0.14); color:#5eead4; border:1px solid rgba(20,184,166,0.32); }
+      /* ── Itinéraire de Papa, étape par étape (timeline enfants) ─ */
+      .fam-route { margin-top:2px; }
+      .fam-route .stage-wrap { padding-left:34px; margin-bottom:9px; }
+      .fam-route .stage-dot { width:24px; height:24px; font-size:.7rem; top:2px; }
+      .fam-route-row { background:var(--bg); border:1px solid var(--border); border-radius:11px; padding:9px 12px; display:flex; align-items:center; justify-content:space-between; gap:8px; transition:border-color .2s, background .2s; }
+      .fam-route-row .frr-km { font-size:.72rem; color:var(--muted); white-space:nowrap; }
+      .fam-route .stage-wrap:not(.stage-done) .fam-route-row { opacity:.68; }
+      .fam-route .stage-wrap.fam-route-cur .fam-route-row { opacity:1; border-color:rgba(245,158,11,0.5); background:rgba(245,158,11,0.07); }
+      .fam-route .stage-wrap.fam-route-cur .stage-dot { background:var(--accent); border-color:var(--accent); color:#1a0e02; box-shadow:0 0 0 4px rgba(245,158,11,0.22); animation:famPulseAccent 2s infinite; }
+      @keyframes famPulseAccent { 0%{box-shadow:0 0 0 0 rgba(245,158,11,0.55);} 70%{box-shadow:0 0 0 14px rgba(245,158,11,0);} 100%{box-shadow:0 0 0 0 rgba(245,158,11,0);} }
+      @media (prefers-reduced-motion:reduce){ .fam-route .stage-wrap.fam-route-cur .stage-dot{ animation:none; } }
+      /* ── Changement de code (panneau, remplace prompt()) ─ */
+      #fam-pinchange .fam-pin { justify-content:flex-start; margin:10px 0 6px; }
+      #fam-pinchange .fam-pin input { width:48px; height:56px; font-size:1.5rem; }
       /* ── À voir (POI) ───────────────────────────────────── */
       .poi-filters { display:flex; gap:8px; flex-wrap:wrap; margin:4px 0 14px; }
       .poi-chip { background:none; border:1px solid var(--border); color:var(--muted); padding:7px 14px; border-radius:22px; cursor:pointer; font-size:.82rem; font-weight:600; font-family:inherit; transition:color .18s, background .18s, border-color .18s; }
@@ -1272,6 +1288,7 @@
             </div>
             <div id="fam-where" style="font-size:1.05rem;font-weight:700;margin-top:12px"></div>
             <div id="fam-when" style="font-size:.85rem;color:var(--muted);margin-top:3px"></div>
+            <div id="fam-next" style="display:none;margin-top:9px"></div>
           </div>
 
           <div class="card">
@@ -1284,6 +1301,15 @@
             <div id="fam-map" class="fam-map"></div>
             <div class="fam-grid" id="fam-stats"></div>
             <a class="btn btn-secondary" id="fam-map-link" target="_blank" rel="noopener" style="margin-top:12px;display:inline-block">&#x1F4CD; Ouvrir dans Google Maps</a>
+          </div>
+
+          <div class="card" id="fam-route-card" style="display:none">
+            <h2>&#x1F9ED; Le voyage de Papa, &eacute;tape par &eacute;tape</h2>
+            <div class="budget-bar-wrap" style="margin-top:2px">
+              <div class="budget-bar-label"><span>Progression</span><span id="fam-route-pct" style="font-weight:700;color:var(--accent)">0%</span></div>
+              <div class="budget-bar-track"><div class="budget-bar-fill" id="fam-route-fill" style="width:0%;background:linear-gradient(90deg,var(--accent2),var(--accent))"></div></div>
+            </div>
+            <div class="fam-route" id="fam-route"></div>
           </div>
 
           <div class="card fam-kiss-card">
@@ -1318,6 +1344,7 @@
                 <div><label>Lien de la vidéo</label><input id="fam-vid-url" placeholder="https://…"/></div>
               </div>
               <button class="btn btn-secondary" id="fam-vid-add" style="margin-top:8px">➕ Ajouter la vidéo</button>
+              <div class="fam-err" id="fam-vid-err"></div>
               <div id="fam-vid-list" style="margin-top:12px"></div>
 
               <h3 style="margin-top:18px">&#x1F48B; Bisous re&ccedil;us</h3>
@@ -1335,6 +1362,20 @@
                 <button class="btn btn-secondary" id="fam-change-pin">🔑 Changer le code</button>
                 <button class="btn btn-secondary" id="fam-export">📤 Créer la page pour mes enfants</button>
                 <button class="btn btn-secondary" id="fam-lock-now">🔒 Verrouiller maintenant</button>
+              </div>
+              <div id="fam-pinchange" style="display:none;margin-top:12px;background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:13px 14px">
+                <label>🔑 Nouveau code &agrave; 4 chiffres</label>
+                <div class="fam-pin" id="fam-pinchange-pin">
+                  <input type="number" inputmode="numeric" maxlength="1" aria-label="nouveau chiffre 1"/>
+                  <input type="number" inputmode="numeric" maxlength="1" aria-label="nouveau chiffre 2"/>
+                  <input type="number" inputmode="numeric" maxlength="1" aria-label="nouveau chiffre 3"/>
+                  <input type="number" inputmode="numeric" maxlength="1" aria-label="nouveau chiffre 4"/>
+                </div>
+                <div class="fam-err" id="fam-pinchange-err"></div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:2px">
+                  <button class="btn btn-primary" id="fam-pinchange-save" type="button">✅ Valider</button>
+                  <button class="btn btn-secondary" id="fam-pinchange-cancel" type="button">Annuler</button>
+                </div>
               </div>
               <p style="font-size:.74rem;color:var(--muted);margin-top:10px">ℹ️ « Créer la page » génère un fichier <strong>papa-en-voyage.html</strong> autonome (photos + message + code) que tu peux envoyer à tes enfants par Messages/Mail : ils l'ouvrent sur leur téléphone, même sans l'appli.</p>
             </div>
@@ -3246,28 +3287,53 @@
         }));
         const where = last && last.city ? last.city : (typeof originName==='function' ? originName() : 'la maison');
         const gps = last && last.gps ? last.gps : null;
-        return { dayLabel, started, remain, km: Math.round(km), photos, where, gps, stages: entries.length, lastDate: last && last.date };
+        // ── Itinéraire complet + progression (timeline visuelle pour les enfants) ──
+        // On déduit la position de Papa en comparant les villes du carnet de bord
+        // aux étapes officielles de la route (ROUTE_WP) — l'étape géographique la
+        // plus avancée qui matche devient « ici », tout ce qui précède est acquis.
+        let route = [], progressPct = 0, next = null;
+        try {
+          const wps = (typeof ROUTE_WP !== 'undefined') ? ROUTE_WP : [];
+          if (wps.length){
+            const entryKeys = entries.map(e => _cityKey(e.city||'')).filter(Boolean);
+            let cum = 0, lastDoneIdx = -1;
+            const cums = wps.map(w => { cum += (w.km||0); return cum; });
+            const totalKm = cums[cums.length-1] || 0;
+            wps.forEach((w,i) => {
+              const wn = _cityKey(w.name);
+              if (wn && entryKeys.some(ek => ek.includes(wn) || wn.includes(ek))) lastDoneIdx = i;
+            });
+            if (started && lastDoneIdx < 0) lastDoneIdx = 0;
+            route = wps.map((w,i) => ({ name:w.name, flag:w.flag, km:w.km, done:i<=lastDoneIdx && lastDoneIdx>=0, current:i===lastDoneIdx }));
+            next = (started && lastDoneIdx >= 0 && lastDoneIdx < wps.length-1) ? wps[lastDoneIdx+1] : null;
+            progressPct = (lastDoneIdx >= 0 && totalKm > 0) ? Math.min(100, Math.round(cums[lastDoneIdx]/totalKm*100)) : 0;
+          }
+        } catch(e){}
+        return { dayLabel, started, remain, km: Math.round(km), photos, where, gps, stages: entries.length, lastDate: last && last.date, route, progressPct, next };
       }
 
       function initFamily(){
         if (!_familyInit){
           famWirePin('fam-setup-pin');
           famWirePin('fam-lock-pin', () => { if (famReadPin('fam-lock-pin').length === 4) famTryUnlock(); });
+          famWirePin('fam-pinchange-pin', () => { if (famReadPin('fam-pinchange-pin').length === 4) famSaveNewPin(); });
           document.getElementById('fam-setup-go').addEventListener('click', famActivate);
           document.getElementById('fam-lock-go').addEventListener('click', famTryUnlock);
           document.getElementById('fam-save-msg').addEventListener('click', () => {
             try { localStorage.setItem(FAM_MSG_KEY, document.getElementById('fam-edit-msg').value); } catch(e){}
-            renderFamilyDash(); alert('💬 Message mis à jour pour les enfants !');
+            renderFamilyDash(); showToast('Message mis à jour pour les enfants !', { icon:'💬' });
           });
           document.getElementById('fam-vid-add').addEventListener('click', famAddVideo);
-          document.getElementById('fam-change-pin').addEventListener('click', famChangePin);
+          document.getElementById('fam-change-pin').addEventListener('click', famTogglePinChange);
+          document.getElementById('fam-pinchange-save').addEventListener('click', famSaveNewPin);
+          document.getElementById('fam-pinchange-cancel').addEventListener('click', () => { document.getElementById('fam-pinchange').style.display = 'none'; });
           document.getElementById('fam-lock-now').addEventListener('click', () => { _familyUnlocked = false; renderFamilyState(); });
           document.getElementById('fam-export').addEventListener('click', famExportPage);
           document.getElementById('fam-kiss-btn').addEventListener('click', famSendKiss);
           document.getElementById('fam-contact-save').addEventListener('click', () => {
             const c = { phone:(document.getElementById('fam-contact-phone').value||'').trim(), email:(document.getElementById('fam-contact-email').value||'').trim() };
             try { localStorage.setItem(FAM_CONTACT_KEY, JSON.stringify(c)); } catch(e){}
-            alert(String.fromCodePoint(0x1F4BE) + ' Coordonn\u00e9es enregistr\u00e9es ! Le bouton bisou de la page enfants t\'enverra un message ici.');
+            showToast('Coordonnées enregistrées ! Le bouton bisou de la page enfants t\'enverra un message ici.', { icon:'💾' });
           });
           _familyInit = true;
         }
@@ -3295,7 +3361,7 @@
         } catch(e){}
         _familyUnlocked = true;
         renderFamilyState();
-        alert('✅ Espace famille activé !\n\nDonne le code « ' + pin + ' » à tes enfants. Ils pourront suivre ton voyage en ouvrant l\'onglet 👨‍👧‍👦 Famille.');
+        showToast('Espace famille activé ! Donne le code <b>' + pin + '</b> à tes enfants.<br><span style="color:var(--muted)">Ils pourront suivre ton voyage dans l\'onglet 👨‍👧‍👦 Famille.</span>', { icon:'✅', duration:15000 });
       }
 
       function famTryUnlock(){
@@ -3305,18 +3371,32 @@
         else { err.textContent = '😅 Oups, ce n\'est pas le bon code. Réessaie !'; famClearPin('fam-lock-pin'); const f = document.querySelector('#fam-lock-pin input'); if (f) f.focus(); }
       }
 
-      function famChangePin(){
-        const np = prompt('Nouveau code à 4 chiffres pour les enfants :', '');
-        if (np === null) return;
-        if (!/^\d{4}$/.test(np)){ alert('⚠️ Il faut exactement 4 chiffres.'); return; }
+      // Changement de code : panneau intégré (plus de prompt() natif disgracieux) ─
+      function famTogglePinChange(){
+        const panel = document.getElementById('fam-pinchange'); if (!panel) return;
+        const opening = panel.style.display === 'none';
+        panel.style.display = opening ? '' : 'none';
+        if (opening){
+          famClearPin('fam-pinchange-pin');
+          document.getElementById('fam-pinchange-err').textContent = '';
+          setTimeout(() => { const f = document.querySelector('#fam-pinchange-pin input'); if (f) f.focus(); }, 30);
+        }
+      }
+      function famSaveNewPin(){
+        const np = famReadPin('fam-pinchange-pin');
+        const err = document.getElementById('fam-pinchange-err');
+        if (!/^\d{4}$/.test(np)){ err.textContent = '⚠️ Il faut exactement 4 chiffres.'; return; }
         try { localStorage.setItem(FAM_PIN_KEY, famHash(np)); } catch(e){}
-        alert('🔑 Nouveau code enregistré : ' + np);
+        document.getElementById('fam-pinchange').style.display = 'none';
+        showToast('Nouveau code enregistré : <b>' + np + '</b><br><span style="color:var(--muted)">Pense à le redonner à tes enfants.</span>', { icon:'🔑', duration:12000 });
       }
 
       function famAddVideo(){
         const label = (document.getElementById('fam-vid-label').value || '').trim();
         const url = (document.getElementById('fam-vid-url').value || '').trim();
-        if (!/^https?:\/\//i.test(url)){ alert('Colle un lien valide (https://…)'); return; }
+        const err = document.getElementById('fam-vid-err');
+        if (!/^https?:\/\//i.test(url)){ if (err) err.textContent = '⚠️ Colle un lien valide (https://…)'; return; }
+        if (err) err.textContent = '';
         const vids = famGetVideos();
         vids.push({ label: label || 'Vidéo', url, at: new Date().toISOString() });
         famSetVideos(vids);
@@ -3333,6 +3413,13 @@
         document.getElementById('fam-ok').textContent = t.started ? 'Papa va bien 💚' : 'Papa prépare son voyage 🧳';
         document.getElementById('fam-where').innerHTML = '📍 ' + (t.started ? 'En ce moment vers <strong>' + famEsc(t.where) + '</strong>' : 'Départ depuis <strong>' + famEsc(t.where) + '</strong>');
         document.getElementById('fam-when').textContent = t.lastDate ? ('Dernière nouvelle : ' + t.lastDate) : '';
+        const nextBox = document.getElementById('fam-next');
+        if (nextBox){
+          if (t.next){
+            nextBox.style.display = '';
+            nextBox.innerHTML = '<span class="fam-next-chip">➡️ Prochaine étape : <b>' + famEsc(t.next.name) + '</b>' + (t.next.km ? (' · ~' + t.next.km + ' km') : '') + '</span>';
+          } else nextBox.style.display = 'none';
+        }
         // Message
         const msg = famGetMsg();
         document.getElementById('fam-msg').innerHTML = (msg ? famMsgHtml(msg) : 'Coucou les enfants ! Papa pense très fort à vous ❤️') + '<span class="from">— Papa 🏍️</span>';
@@ -3347,6 +3434,22 @@
         document.getElementById('fam-stats').innerHTML = cells.map(c => '<div class="fam-cell"><div class="v">' + c[0] + ' ' + c[1] + '</div><div class="l">' + c[2] + '</div></div>').join('');
         const mapLink = document.getElementById('fam-map-link');
         mapLink.href = t.gps ? ('https://maps.google.com/?q=' + encodeURIComponent(t.gps)) : 'https://www.google.com/maps/search/' + encodeURIComponent(t.where);
+        // Itinéraire complet (timeline) + barre de progression
+        const routeCard = document.getElementById('fam-route-card');
+        if (routeCard){
+          if (t.route && t.route.length){
+            routeCard.style.display = '';
+            const pctEl = document.getElementById('fam-route-pct'); if (pctEl) pctEl.textContent = t.progressPct + '%';
+            const fillEl = document.getElementById('fam-route-fill'); if (fillEl) fillEl.style.width = t.progressPct + '%';
+            document.getElementById('fam-route').innerHTML = t.route.map((w,i) => {
+              const dot = w.current ? String.fromCodePoint(0x1F3CD,0xFE0F) : (w.done ? '✓' : String(i+1));
+              return '<div class="stage-wrap' + (w.done?' stage-done':'') + (w.current?' fam-route-cur':'') + '">'
+                + '<div class="stage-dot">' + dot + '</div>'
+                + '<div class="fam-route-row"><span style="font-weight:700">' + (w.flag||'') + ' ' + famEsc(w.name) + (w.current ? ' <span class="badge" style="background:rgba(245,158,11,.15);color:var(--accent);border-color:rgba(245,158,11,.35)">ici</span>' : '') + '</span><span class="frr-km">' + (w.km ? ('~'+w.km+' km') : '') + '</span></div>'
+                + '</div>';
+            }).join('');
+          } else routeCard.style.display = 'none';
+        }
         // Vidéos
         const vids = famGetVideos();
         const vidCard = document.getElementById('fam-vid-card');
@@ -3473,7 +3576,7 @@
         const blob = new Blob([html], { type:'text/html' });
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'papa-en-voyage.html'; a.click();
         setTimeout(() => URL.revokeObjectURL(a.href), 4000);
-        alert('📤 Page « papa-en-voyage.html » créée !\n\nEnvoie ce fichier à tes enfants (Messages, Mail, AirDrop). Ils l\'ouvrent sur leur téléphone et entrent le code secret pour voir ton voyage — même sans l\'appli.');
+        showToast('Page <b>papa-en-voyage.html</b> créée ! Envoie-la à tes enfants (Messages, Mail, AirDrop).<br><span style="color:var(--muted)">Ils l\'ouvrent sur leur téléphone et entrent le code secret — même sans l\'appli.</span>', { icon:'📤', duration:10000 });
       }
 
       // Gabarit de la page exportée : même logique de code PIN, autonome (offline)
