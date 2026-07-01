@@ -983,6 +983,7 @@
           <div class="prep-switch" id="prep-switch">
             <button type="button" data-pane="presets" class="on">&#x1F5FA;&#xFE0F; Itinéraires prêts</button>
             <button type="button" data-pane="custom">&#x1F39B;&#xFE0F; Sur-mesure</button>
+            <button type="button" data-pane="manual">&#x1F6E0;&#xFE0F; Manuel</button>
           </div>
 
           <!-- Pane : itinéraires 5 jours prêts à l'emploi -->
@@ -1024,6 +1025,32 @@
             </div>
             <div id="cfg-results" style="margin-top:16px"></div>
           </div>
+
+          <!-- Pane : configuration manuelle (nom, distance, moto, pays) -->
+          <div class="prep-pane" id="prep-pane-manual" hidden>
+            <p class="hint">Tu préfères tout régler toi-même&nbsp;? Renseigne le nom, la distance, ta moto et les pays traversés, puis génère ton plan (essence, budget, hébergement…).</p>
+            <div class="g2" style="margin-bottom:10px">
+              <div><label>&#x1F3F7;&#xFE0F; Nom du trip</label><input id="f-name" value="Road Trip Moto Europe 2026"/></div>
+              <div><label>&#x1F4CF; Distance totale (km)</label><input id="f-dist" type="number" value="4400" min="0"/></div>
+              <div><label>&#x1F6E3;&#xFE0F; Km par jour</label><input id="f-daily" type="number" value="260" min="50"/></div>
+              <div><label>&#x1F3E8; Budget / nuit (€)</label><input id="f-night" type="number" value="55" min="10"/></div>
+            </div>
+            <h3>&#x1F3CD;&#xFE0F; Ta moto — Honda CBR 600 RR Repsol 2013</h3>
+            <div class="g3">
+              <div><label>&#x26FD; Réservoir (L)</label><input id="f-tank" type="number" step="0.1" value="18.1"/></div>
+              <div><label>&#x1F4CA; Conso (L/100 km)</label><input id="f-conso" type="number" step="0.1" value="5.8"/></div>
+              <div><label>&#x1F4B6; Prix essence (€/L)</label><input id="f-price" type="number" step="0.01" value="1.95"/></div>
+              <div><label>&#x1F6DF; Réserve sécurité (%)</label><input id="f-reserve" type="number" value="22" min="5" max="40"/></div>
+            </div>
+            <h3 style="margin-top:16px">&#x1F30D; Pays de ton itinéraire</h3>
+            <p style="font-size:0.8rem;color:var(--muted);margin-bottom:10px">Touche un drapeau pour l'ajouter à ta route ou l'enlever — coche tous les pays que tu vas traverser. <span id="cpick-count" class="cpick-count"></span></p>
+            <div id="country-pick" class="country-pick"></div>
+            <input id="f-countries" type="hidden" value="FR, BE, DE, PL, LT, LV, EE"/>
+            <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+              <button class="btn btn-primary" id="generateBtn">&#x26A1; Générer le plan</button>
+              <button class="btn btn-secondary" id="clearBtn">&#x1F5D1;&#xFE0F; Réinitialiser</button>
+            </div>
+          </div>
         </div>
 
         <!-- Résultat : fiche route dynamique + résumé -->
@@ -1032,38 +1059,6 @@
           <h2>&#x1F4CB; Résumé du voyage</h2>
           <div class="g3" id="summary-stats"></div>
         </div>
-
-        <!-- Réglages avancés (repliés par défaut) -->
-        <details class="fold">
-          <summary>&#x2699;&#xFE0F; Réglages avancés <span class="fold-sub">moto · distances · pays</span></summary>
-          <div class="fold-body">
-          <div class="g2" style="margin-bottom:10px">
-            <div><label>&#x1F3F7;&#xFE0F; Nom du trip</label><input id="f-name" value="Road Trip Moto Europe 2026"/></div>
-            <div><label>&#x1F4CF; Distance totale (km)</label><input id="f-dist" type="number" value="4400" min="0"/></div>
-            <div><label>&#x1F6E3;&#xFE0F; Km par jour</label><input id="f-daily" type="number" value="260" min="50"/></div>
-            <div><label>&#x1F3E8; Budget / nuit (€)</label><input id="f-night" type="number" value="55" min="10"/></div>
-          </div>
-          <h3>&#x1F3CD;&#xFE0F; Ta moto — Honda CBR 600 RR Repsol 2013</h3>
-          <div class="g3">
-            <div><label>&#x26FD; Réservoir (L)</label><input id="f-tank" type="number" step="0.1" value="18.1"/></div>
-            <div><label>&#x1F4CA; Conso (L/100 km)</label><input id="f-conso" type="number" step="0.1" value="5.8"/></div>
-            <div><label>&#x1F4B6; Prix essence (€/L)</label><input id="f-price" type="number" step="0.01" value="1.95"/></div>
-            <div><label>&#x1F6DF; Réserve sécurité (%)</label><input id="f-reserve" type="number" value="22" min="5" max="40"/></div>
-          </div>
-          <h3 style="margin-top:16px">&#x1F30D; Pays de ton itinéraire</h3>
-          <p style="font-size:0.8rem;color:var(--muted);margin-bottom:10px">Touche un drapeau pour l'ajouter à ta route ou l'enlever — coche tous les pays que tu vas traverser. <span id="cpick-count" class="cpick-count"></span></p>
-          <div id="country-pick" class="country-pick"></div>
-          <input id="f-countries" type="hidden" value="FR, BE, DE, PL, LT, LV, EE"/>
-          <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
-            <button class="btn btn-primary" id="generateBtn">&#x26A1; Générer le plan</button>
-            <button class="btn btn-secondary" id="clearBtn">&#x1F5D1;&#xFE0F; Réinitialiser</button>
-          </div>
-          <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px">
-            <p style="font-size:0.76rem;color:var(--muted);margin-bottom:8px">Un souci d'affichage ou une vieille version en cache&nbsp;?</p>
-            <button class="btn btn-secondary" id="force-refresh" onclick="forceAppRefresh()">&#x267B;&#xFE0F; Forcer la mise à jour</button>
-          </div>
-          </div>
-        </details>
       </div>
     </div>
 
@@ -1785,6 +1780,12 @@
           <div class="alert" style="margin-top:12px">🛠️ <strong>Astuce CBR600RR :</strong> emporte un kit chaîne (graisse + chiffon), 1 L d'huile <strong>10W-30 MA2</strong>, des plaquettes de rechange et un kit anti-crevaison mèches — les concessions sport sont rares dans les Baltes.</div>
           </div>
         </details>
+
+        <div class="card">
+          <h2>🧹 Maintenance de l'application</h2>
+          <p class="hint">Un souci d'affichage ou une vieille version en cache&nbsp;?</p>
+          <button class="btn btn-secondary" id="force-refresh" onclick="forceAppRefresh()">&#x267B;&#xFE0F; Forcer la mise à jour</button>
+        </div>
       </div>
     </div>
 
@@ -3887,6 +3888,10 @@
             if (typeof renderPoi === 'function') renderPoi();
           }
         } catch(e){}
+        try { renderJourney(); } catch(e){}
+        // Régénère aussitôt le plan complet (essence, budget, hébergement…) — plus
+        // besoin d'aller chercher un bouton « Générer » ailleurs sur la page.
+        try { generatePlan({ silent: true }); } catch(e){}
         const EM = String.fromCodePoint;
         const via = m.stopsOut.length ? ('\n' + EM(0x1F6D1) + ' Via : ' + m.stopsOut.map(s => s.name).join(' \u00b7 ')) : '';
         const viaRet = (loop && m.stopsRet.length) ? ('\n' + EM(0x21A9,0xFE0F) + ' Retour par : ' + m.stopsRet.map(s => s.name).join(' \u00b7 ')) : '';
@@ -3895,7 +3900,7 @@
           + '\n\n' + EM(0x1F4CF) + ' ' + m.rt.toLocaleString('fr-FR') + ' km ' + (loop ? 'en boucle' : 'aller-retour') + via + viaRet
           + '\n' + EM(0x1F5D3,0xFE0F) + ' ' + sched
           + '\n' + EM(0x1F4B0) + ' Budget estim\u00e9 : ' + cfgEur(m.total)
-          + '\n\nNom du trip et distance mis \u00e0 jour dans \u00ab Param\u00e8tres du trajet \u00bb. ' + EM(0x1F9ED) + ' Ouvre l\'itin\u00e9raire ' + (loop ? 'boucle' : 'Google') + ' depuis la carte.');
+          + '\n\nCarte, \u00e9tapes, plan et budget sont \u00e0 jour. ' + EM(0x1F9ED) + ' Ouvre l\'itin\u00e9raire ' + (loop ? 'boucle' : 'Google') + ' depuis la carte.');
       };
 
       // ── Itinéraires 5 jours clés en main (partout en Europe) ──────
@@ -4099,6 +4104,9 @@
         } catch(e){}
         try { renderJourney(); } catch(e){}
         try { if (typeof renderPoi === 'function') renderPoi(); } catch(e){}
+        // Régénère aussitôt le plan complet (essence, budget, hébergement…) — plus
+        // besoin d'aller chercher un bouton « Générer » ailleurs sur la page.
+        try { generatePlan({ silent: true }); } catch(e){}
         const EM = String.fromCodePoint;
         const approachTxt = m.nearby
           ? 'Tu es déjà sur place !'
@@ -4150,7 +4158,7 @@
             renderCfgPresets(b.dataset.pzone);
           }));
         }
-        // Bascule segmentée : « Itinéraires prêts » ⇄ « Sur-mesure »
+        // Bascule segmentée : « Itinéraires prêts » ⇄ « Sur-mesure » ⇄ « Manuel »
         const sw = document.getElementById('prep-switch');
         if (sw){
           sw.querySelectorAll('[data-pane]').forEach(b => b.addEventListener('click', () => {
@@ -4159,8 +4167,10 @@
             const pane = b.dataset.pane;
             const pp = document.getElementById('prep-pane-presets');
             const pc = document.getElementById('prep-pane-custom');
+            const pm = document.getElementById('prep-pane-manual');
             if (pp) pp.hidden = pane !== 'presets';
             if (pc) pc.hidden = pane !== 'custom';
+            if (pm) pm.hidden = pane !== 'manual';
             if (pane === 'presets'){ try { renderCfgPresets(_presetZone); } catch(e){} }
           }));
         }
