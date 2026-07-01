@@ -117,15 +117,20 @@
       /* ── Alert ──────────────────────────────────────────── */
       .alert { background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.3); border-radius: var(--radius-sm); padding: 11px 15px; font-size: .84rem; color: #fde68a; margin-top: 12px; }
       /* ── Diary ──────────────────────────────────────────── */
-      .entry { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; transition: border-color .2s; }
-      .entry:hover { border-color: var(--border-strong); }
+      .diary-hero { background:linear-gradient(125deg, rgba(245,158,11,0.14), rgba(167,139,250,0.08) 55%, rgba(20,184,166,0.09)); border:1px solid rgba(245,158,11,0.3); position:relative; overflow:hidden; }
+      .diary-hero::before { content:''; position:absolute; right:-40px; top:-40px; width:180px; height:180px; border-radius:50%; background:radial-gradient(circle, rgba(245,158,11,0.2), transparent 70%); pointer-events:none; }
+      .wpick { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+      .wpick-chip { font-size:.74rem; padding:5px 11px; border-radius:20px; background:var(--bg2); border:1px solid var(--border); color:var(--text); cursor:pointer; font-family:inherit; transition:border-color .15s, background .15s, transform .15s; }
+      .wpick-chip:hover { border-color:var(--accent); background:rgba(245,158,11,0.1); transform:translateY(-1px); }
+      .entry { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; transition: border-color .2s, transform .2s, box-shadow .2s; }
+      .entry:hover { border-color: var(--border-strong); transform:translateY(-2px); box-shadow:0 10px 26px rgba(0,0,0,0.35); }
       .entry-hd { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: .8rem; color: var(--muted); }
       /* ── Carnet de bord (stats GPS par étape) ───────────── */
       .cb-summary { background: var(--bg3); border:1px solid var(--border); border-radius:14px; padding:15px 16px; margin-bottom:14px; }
       .cb-summary h2 { margin:0 0 4px; }
       .cb-sum-grid { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
       .cb-sum-cell { flex:1; min-width:88px; background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:11px 8px; text-align:center; }
-      .cb-sum-cell .v { font-size:1.4rem; font-weight:800; line-height:1; color:var(--accent); font-variant-numeric:tabular-nums; }
+      .cb-sum-cell .v { font-size:1.4rem; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; background:linear-gradient(135deg,#fbbf24,#2dd4bf); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
       .cb-sum-cell .l { font-size:.66rem; color:var(--muted); margin-top:6px; text-transform:uppercase; letter-spacing:.04em; }
       .cb-badge { display:inline-flex; align-items:center; gap:5px; font-size:.68rem; font-weight:800; padding:3px 9px; border-radius:20px; background:rgba(34,197,94,0.16); color:#86efac; letter-spacing:.02em; }
       .cb-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(80px,1fr)); gap:7px; margin-top:10px; }
@@ -137,10 +142,15 @@
       .cb-chip b { color:var(--text); font-weight:700; }
       .ride-save-row { max-width:430px; width:100%; align-self:center; margin-top:10px; }
       .ride-save-row .btn { width:100%; padding:12px; font-size:.9rem; }
+      /* ── Diary : timeline d'étapes (réutilise .stage-wrap/.stage-dot) ─ */
+      .de-timeline .stage-wrap { padding-left:40px; margin-bottom:14px; }
+      .de-timeline .stage-dot { border:none; color:#fff; font-size:.78rem; }
+      .de-timeline .stage-dot.n1 { background:linear-gradient(135deg,var(--accent2),#0ea5e9); }
+      .de-timeline .stage-dot.n2 { background:linear-gradient(135deg,var(--violet),var(--pink)); }
+      .de-timeline .entry { margin-bottom:0; }
       /* ── Diary : entrées (mise en page structurée) ──────── */
       .de-hd { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
       .de-hd-l { display:flex; align-items:center; gap:7px; flex-wrap:wrap; font-size:.8rem; color:var(--muted); }
-      .de-idx { font-size:.64rem; font-weight:800; padding:2px 8px; border-radius:20px; background:var(--bg2); border:1px solid var(--border); color:var(--muted); letter-spacing:.02em; white-space:nowrap; }
       .de-actions { display:flex; gap:6px; flex:none; }
       .de-actions .btn { padding:3px 10px; font-size:.75rem; }
       .de-city { font-weight:700; font-size:.95rem; }
@@ -154,6 +164,12 @@
       .de-photo img { width:88px; height:88px; object-fit:cover; border-radius:10px; border:1px solid var(--border); cursor:pointer; transition:transform .15s; }
       .de-photo img:hover { transform:scale(1.04); }
       .de-photo .geo { position:absolute; bottom:3px; left:3px; background:rgba(34,197,94,0.92); color:#04210f; border-radius:6px; font-size:.6rem; padding:1px 5px; font-weight:800; text-decoration:none; }
+      /* Photo de couverture (1re photo de l'étape, en bandeau façon carte postale) */
+      .de-cover { position:relative; margin:-16px -16px 12px; border-radius:12px 12px 0 0; overflow:hidden; cursor:pointer; background:var(--bg2); }
+      .de-cover img { width:100%; height:180px; object-fit:cover; display:block; transition:transform .3s; }
+      .de-cover:hover img { transform:scale(1.045); }
+      .de-cover .geo { position:absolute; bottom:8px; left:8px; background:rgba(34,197,94,0.92); color:#04210f; border-radius:7px; font-size:.68rem; padding:2px 8px; font-weight:800; text-decoration:none; }
+      .de-cover-count { position:absolute; top:8px; right:8px; background:rgba(9,9,11,0.72); color:#fff; font-size:.68rem; font-weight:700; padding:4px 10px; border-radius:20px; backdrop-filter:blur(4px); }
       /* Aperçu des photos avant enregistrement (formulaire) */
       .dp-photo { position:relative; }
       .dp-photo img { width:64px; height:64px; object-fit:cover; border-radius:9px; border:1px solid var(--border); }
@@ -1237,18 +1253,27 @@
     <!-- TAB CARNET -->
     <div class="tab-content" data-tab="diary">
       <div class="wrap">
-        <div class="card">
+        <div class="card diary-hero">
           <h2>📔 Nouvelle étape</h2>
           <p style="font-size:0.82rem;color:var(--muted);margin-bottom:14px">Sauvegardé localement (même hors-ligne). Importe tes photos iPhone : leur <strong style="color:#86efac">géolocalisation 📍</strong> et leur date sont lues automatiquement dans l'image, et tu peux <strong style="color:var(--accent)">partager 📤</strong> chaque étape avec tes fils.</p>
           <div class="g2" style="margin-bottom:10px">
-            <div><label>Étape / Ville</label><input id="d-city" placeholder="Col du Galibier, Chamonix…"/></div>
-            <div><label>Date</label><input id="d-date" type="date"/></div>
-            <div><label>Km du jour</label><input id="d-km" type="number" placeholder="310"/></div>
-            <div><label>Météo</label><input id="d-weather" placeholder="☀️ 28°C, vent modéré"/></div>
+            <div><label>📍 Étape / Ville</label><input id="d-city" placeholder="Col du Galibier, Chamonix…"/></div>
+            <div><label>📅 Date</label><input id="d-date" type="date"/></div>
+            <div><label>📏 Km du jour</label><input id="d-km" type="number" placeholder="310"/></div>
+            <div><label>🌤️ Météo</label><input id="d-weather" placeholder="☀️ 28°C, vent modéré"/>
+              <div class="wpick">
+                <button type="button" class="wpick-chip" onclick="wpick('☀️ Ensoleillé')">☀️ Soleil</button>
+                <button type="button" class="wpick-chip" onclick="wpick('⛅ Nuageux')">⛅ Nuageux</button>
+                <button type="button" class="wpick-chip" onclick="wpick('🌧️ Pluie')">🌧️ Pluie</button>
+                <button type="button" class="wpick-chip" onclick="wpick('⛈️ Orage')">⛈️ Orage</button>
+                <button type="button" class="wpick-chip" onclick="wpick('💨 Vent fort')">💨 Vent</button>
+                <button type="button" class="wpick-chip" onclick="wpick('🥵 Canicule')">🥵 Canicule</button>
+              </div>
+            </div>
           </div>
-          <div style="margin-bottom:10px"><label>Notes / Adresses / Points d'intérêt</label>
+          <div style="margin-bottom:10px"><label>📝 Notes / Adresses / Points d'intérêt</label>
             <textarea id="d-notes" placeholder="Hôtel des Alpes — garage couvert ✓&#10;Resto 'La Marmite' : excellent&#10;Pneu AR à surveiller…"></textarea></div>
-          <div><label>Note carburant</label><input id="d-fuel" placeholder="Plein à Gap, 17.2 L → 1.86 €/L"/></div>
+          <div><label>⛽ Note carburant</label><input id="d-fuel" placeholder="Plein à Gap, 17.2 L → 1.86 €/L"/></div>
           <div style="margin-top:10px"><label>📸 Photos iPhone (géoloc + date lues dans l'image)</label>
             <input id="d-photos" type="file" accept="image/*" multiple style="padding:8px"/>
             <div style="font-size:0.72rem;color:var(--muted);margin-top:5px">📍 Le lieu vient de la photo elle-même (lieu réel de la prise de vue, pas ta position actuelle). Sur iPhone : active <em>Réglages ▸ Confidentialité ▸ Service de localisation ▸ Appareil photo</em>.</div>
@@ -3082,6 +3107,8 @@
         ).join('') + (_diaryPhotos.length ? `<div class="dp-hint">${_diaryPhotos.length} photo(s) · <strong style="color:#86efac">${geo} géolocalisée(s) 📍</strong></div>` : '');
       }
       window.rmDiaryPhoto = i => { _diaryPhotos.splice(i,1); renderDiaryPreview(); };
+      // Remplit rapidement le champ météo depuis une puce (☀️/🌧️/…) sans avoir à taper.
+      window.wpick = txt => { const el = document.getElementById('d-weather'); el.value = txt; el.focus(); };
 
       // Formate une durée (ms) en « 2 h 05 » ou « 47 min » pour le carnet de bord.
       function cbFmtDur(ms){
@@ -3146,9 +3173,21 @@
             </div>
           </div>`;
         }
-        box.innerHTML = summary + entries.slice().reverse().map((e,i) => {
+        box.innerHTML = summary + '<div class="de-timeline">' + entries.slice().reverse().map((e,i) => {
           const idx = entries.length-1-i;
-          const photosHtml = (e.photos&&e.photos.length) ? `<div class="de-photos">${e.photos.map(ph => {
+          const allPhotos = e.photos || [];
+          // 1re photo = « couverture » façon carte postale en haut de l'étape ;
+          // les suivantes restent en petites vignettes sous le texte.
+          const cover = allPhotos.length ? photoSrc(allPhotos[0]) : '';
+          const coverLat = (cover && typeof allPhotos[0] !== 'string') ? (allPhotos[0].lat ?? null) : null;
+          const coverLng = coverLat!=null ? allPhotos[0].lng : null;
+          const restPhotos = allPhotos.slice(1);
+          const coverHtml = cover ? `<div class="de-cover">
+            <img src="${cover}" onclick="openImg(this.src)" alt="Photo de couverture de l'étape"/>
+            ${coverLat!=null?`<a href="https://maps.google.com/?q=${coverLat},${coverLng}" target="_blank" class="geo" onclick="event.stopPropagation()" title="Lieu de la photo : ${coverLat}, ${coverLng}">📍</a>`:''}
+            ${restPhotos.length?`<span class="de-cover-count">+${restPhotos.length} 📸</span>`:''}
+          </div>` : '';
+          const photosHtml = restPhotos.length ? `<div class="de-photos">${restPhotos.map(ph => {
             const src = photoSrc(ph);
             if (!src) return '';
             const lat = typeof ph==='string' ? null : (ph.lat ?? null);
@@ -3157,7 +3196,7 @@
               ${lat!=null?`<a href="https://maps.google.com/?q=${lat},${ph.lng}" target="_blank" class="geo" onclick="event.stopPropagation()" title="Lieu de la photo : ${lat}, ${ph.lng}">📍</a>`:''}
             </div>`;
           }).join('')}</div>` : '';
-          const geoCount = (e.photos||[]).filter(p => typeof p!=='string' && p.lat!=null).length;
+          const geoCount = allPhotos.filter(p => typeof p!=='string' && p.lat!=null).length;
           const r = e.ride;
           const rideBadge = r ? '<span class="cb-badge">🛰️ GPS</span>' : '';
           const rideHtml = r ? `
@@ -3174,24 +3213,28 @@
               ${r.fuelEur?`<span class="cb-chip">💶 ~<b>${r.fuelEur} €</b></span>`:''}
             </div>` : '';
           return `
-          <div class="entry">
-            <div class="de-hd">
-              <div class="de-hd-l"><span class="de-idx">Étape ${idx+1}/${entries.length}</span><span>${cbFmtDate(e.date)}</span>${rideBadge}</div>
-              <div class="de-actions">
-                <button class="btn btn-secondary" onclick="shareEntry(${idx})">📤 Partager</button>
-                <button class="btn btn-danger" onclick="delEntry(${idx})" aria-label="Supprimer cette étape">✕</button>
+          <div class="stage-wrap">
+            <div class="stage-dot ${idx%2===0?'n1':'n2'}">${idx+1}</div>
+            <div class="entry">
+              ${coverHtml}
+              <div class="de-hd">
+                <div class="de-hd-l"><span>${cbFmtDate(e.date)}</span>${rideBadge}</div>
+                <div class="de-actions">
+                  <button class="btn btn-secondary" onclick="shareEntry(${idx})">📤 Partager</button>
+                  <button class="btn btn-danger" onclick="delEntry(${idx})" aria-label="Supprimer cette étape">✕</button>
+                </div>
               </div>
+              <div class="de-city">📍 ${e.city||'Étape'} ${e.km && !e.ride ? '· '+e.km+' km':''}</div>
+              ${rideHtml}
+              ${e.weather?`<div class="de-line">${e.weather}</div>`:''}
+              ${e.fuel?`<div class="de-fuel">⛽ ${e.fuel}</div>`:''}
+              ${e.notes?`<div class="de-notes">${e.notes}</div>`:''}
+              ${e.gps?`<a href="https://maps.google.com/?q=${e.gps}" target="_blank" class="de-gps">🛰️ ${e.gps}${e.gpsFromPhoto?' · 📸 position de la photo':''}</a>`:''}
+              ${geoCount?`<div class="de-geo-note">${geoCount} photo(s) géolocalisée(s) — touche le 📍 sur une photo pour la carte</div>`:''}
+              ${photosHtml}
             </div>
-            <div class="de-city">📍 ${e.city||'Étape'} ${e.km && !e.ride ? '· '+e.km+' km':''}</div>
-            ${rideHtml}
-            ${e.weather?`<div class="de-line">${e.weather}</div>`:''}
-            ${e.fuel?`<div class="de-fuel">⛽ ${e.fuel}</div>`:''}
-            ${e.notes?`<div class="de-notes">${e.notes}</div>`:''}
-            ${e.gps?`<a href="https://maps.google.com/?q=${e.gps}" target="_blank" class="de-gps">🛰️ ${e.gps}${e.gpsFromPhoto?' · 📸 position de la photo':''}</a>`:''}
-            ${geoCount?`<div class="de-geo-note">${geoCount} photo(s) géolocalisée(s) — touche le 📍 sur une photo pour la carte</div>`:''}
-            ${photosHtml}
           </div>`;
-        }).join('');
+        }).join('') + '</div>';
       }
 
       // Partage natif (iPhone : Messages, WhatsApp, AirDrop…) pour envoyer une étape à tes fils
