@@ -1326,6 +1326,11 @@
     <div class="tab-content" data-tab="weather">
       <div class="wrap">
         <div class="card">
+          <h2>📅 Météo de tes prochaines étapes</h2>
+          <p class="hint">Automatique, sans rien taper — basé sur ton itinéraire et ta date de départ.</p>
+          <div id="wx-auto"></div>
+        </div>
+        <div class="card">
           <h2>🌤️ Météo 7 jours — Open-Meteo</h2>
           <p class="hint">En temps réel, gratuit, sans compte. Tape une ville de ton itinéraire.</p>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -1899,7 +1904,8 @@
         bike: () => initBike(),
         pilote: () => initPilote(),
         diary: () => loadDiary(),
-        family: () => initFamily()
+        family: () => initFamily(),
+        weather: () => { try { renderAutoWeather(); } catch(e){} }
       };      // Bannières illustrées par onglet — les paysages rencontrés le long de la route.
       // theme: depart|plains|fields|forest|mountain|coast|city · hue: teinte du ciel · road: moto sur la route
       const TAB_HERO = {
@@ -4335,6 +4341,87 @@
           btn.disabled = false; btn.textContent = '🔍 Voir la météo';
         }
       }
+
+      // ── Météo automatique des prochaines étapes ────────────────────
+      // Aucune saisie : utilise ROUTE_WP (+ _dayNum posé par recomputeRouteDays,
+      // cf. onglet Préparer) et la date de départ pour afficher, sans rien
+      // demander, la météo du jour d'arrivée des 3 prochaines étapes. Avant le
+      // départ → jours 1-3 du voyage ; pendant le voyage → les 3 prochaines à
+      // partir d'aujourd'hui. Prévisions Open-Meteo fiables ~16 jours max :
+      // au-delà, un placeholder « pas encore disponible » s'affiche.
+      let _autoWxCache = {};
+      function _autoWxCurrentDayNum(){
+        if (!_cdDate || !_cdDate.value) return 1;
+        const dep = new Date(`${_cdDate.value}T${_cdTime.value || '08:00'}`);
+        const now = new Date();
+        if (now < dep) return 1;
+        const dep0 = new Date(dep.getFullYear(), dep.getMonth(), dep.getDate());
+        const now0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        return Math.max(1, Math.round((now0 - dep0) / 86400000) + 1);
+      }
+      function _autoWxDateForDay(dayNum){
+        if (!_cdDate || !_cdDate.value) return null;
+        const dep = new Date(`${_cdDate.value}T00:00:00`);
+        return new Date(dep.getFullYear(), dep.getMonth(), dep.getDate() + (dayNum - 1));
+      }
+      function _autoWxDayGroups(fromDayNum, limit){
+        const map = new Map();
+        for (let i = 1; i < ROUTE_WP.length; i++){
+          const w = ROUTE_WP[i];
+          map.set(w._dayNum || i, w); // dernière ville du jour = arrivée du jour
+        }
+        return Array.from(map.keys()).sort((a,b) => a-b)
+          .filter(d => d >= fromDayNum).slice(0, limit)
+          .map(d => ({ dayNum:d, wp: map.get(d) }));
+      }
+      async function _autoWxFetch(lat, lng){
+        const key = lat.toFixed(2) + ',' + lng.toFixed(2);
+        const c = _autoWxCache[key];
+        if (c && (Date.now() - c.ts) < 30*60*1000) return c.data;
+        try {
+          const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,weathercode&timezone=auto&forecast_days=16&wind_speed_unit=kmh`);
+          const d = await r.json();
+          const data = (d && d.daily) ? d.daily : null;
+          _autoWxCache[key] = { ts:Date.now(), data };
+          return data;
+        } catch(e){ return null; }
+      }
+      async function renderAutoWeather(){
+        const box = document.getElementById('wx-auto');
+        if (!box) return;
+        if (typeof ROUTE_WP === 'undefined' || ROUTE_WP.length < 2){ box.innerHTML=''; return; }
+        const curDay = _autoWxCurrentDayNum();
+        const groups = _autoWxDayGroups(curDay, 3);
+        if (!groups.length){
+          box.innerHTML = '<p style="color:var(--muted);font-size:.84rem">🏁 Plus d\'étape à venir sur cet itinéraire.</p>';
+          return;
+        }
+        box.innerHTML = '<div style="color:var(--muted);font-size:0.85rem">Chargement…</div>';
+        const cards = await Promise.all(groups.map(async g => {
+          const dateObj = _autoWxDateForDay(g.dayNum);
+          const wx = await _autoWxFetch(g.wp.lat, g.wp.lng);
+          let inner = null;
+          if (wx && dateObj){
+            const iso = dateObj.toISOString().slice(0,10);
+            const idx = wx.time.indexOf(iso);
+            if (idx >= 0){
+              inner = `<span class="wx-emoji">${WX_EMOJI(wx.weathercode[idx])}</span>
+                <div class="wx-temp">${Math.round(wx.temperature_2m_max[idx])}° / ${Math.round(wx.temperature_2m_min[idx])}°</div>
+                <div class="wx-detail">💧 ${wx.precipitation_probability_max[idx]}%<br/>💨 ${Math.round(wx.windspeed_10m_max[idx])} km/h</div>
+                <div class="wx-label">${WX_LABEL(wx.weathercode[idx])}</div>`;
+            }
+          }
+          if (!inner) inner = `<span class="wx-emoji">🔮</span><div class="wx-detail">Prévision pas<br/>encore disponible</div>`;
+          const dayLabel = dateObj ? dateObj.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'}) : ('Jour ' + g.dayNum);
+          return `<div class="wx-day">
+            <div style="font-weight:700;color:var(--text);font-size:.78rem;margin-bottom:2px">${g.wp.flag} ${g.wp.name}</div>
+            <div class="wx-date">${dayLabel}</div>
+            ${inner}
+          </div>`;
+        }));
+        box.innerHTML = `<div class="wx-grid">${cards.join('')}</div>`;
+      }
+      window.renderAutoWeather = renderAutoWeather;
 
       // ── Leaflet Map ───────────────────────────────────────────────
       let _mapInit = false;
