@@ -137,6 +137,29 @@
       .cb-chip b { color:var(--text); font-weight:700; }
       .ride-save-row { max-width:430px; width:100%; align-self:center; margin-top:10px; }
       .ride-save-row .btn { width:100%; padding:12px; font-size:.9rem; }
+      /* ── Diary : entrées (mise en page structurée) ──────── */
+      .de-hd { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+      .de-hd-l { display:flex; align-items:center; gap:7px; flex-wrap:wrap; font-size:.8rem; color:var(--muted); }
+      .de-idx { font-size:.64rem; font-weight:800; padding:2px 8px; border-radius:20px; background:var(--bg2); border:1px solid var(--border); color:var(--muted); letter-spacing:.02em; white-space:nowrap; }
+      .de-actions { display:flex; gap:6px; flex:none; }
+      .de-actions .btn { padding:3px 10px; font-size:.75rem; }
+      .de-city { font-weight:700; font-size:.95rem; }
+      .de-line { font-size:.8rem; color:var(--muted); margin-top:3px; }
+      .de-fuel { font-size:.8rem; color:#86efac; margin-top:3px; }
+      .de-notes { font-size:.86rem; margin-top:8px; white-space:pre-wrap; line-height:1.5; }
+      .de-gps { font-size:.76rem; color:var(--accent); margin-top:6px; display:inline-block; text-decoration:none; }
+      .de-geo-note { font-size:.72rem; color:var(--muted); margin-top:4px; }
+      .de-photos { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+      .de-photo { position:relative; }
+      .de-photo img { width:88px; height:88px; object-fit:cover; border-radius:10px; border:1px solid var(--border); cursor:pointer; transition:transform .15s; }
+      .de-photo img:hover { transform:scale(1.04); }
+      .de-photo .geo { position:absolute; bottom:3px; left:3px; background:rgba(34,197,94,0.92); color:#04210f; border-radius:6px; font-size:.6rem; padding:1px 5px; font-weight:800; text-decoration:none; }
+      /* Aperçu des photos avant enregistrement (formulaire) */
+      .dp-photo { position:relative; }
+      .dp-photo img { width:64px; height:64px; object-fit:cover; border-radius:9px; border:1px solid var(--border); }
+      .dp-photo .geo { position:absolute; bottom:2px; left:2px; background:rgba(34,197,94,0.92); color:#04210f; border-radius:6px; font-size:.58rem; padding:0 4px; font-weight:800; }
+      .dp-photo .rm { position:absolute; top:-6px; right:-6px; background:var(--danger); color:#fff; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; font-size:.7rem; line-height:1; }
+      .dp-hint { flex-basis:100%; font-size:.74rem; color:var(--muted); margin-top:4px; }
       /* ── Empty ──────────────────────────────────────────── */
       .empty { text-align: center; padding: 52px 20px; color: var(--muted); }
       .empty .ic { font-size: 3rem; display: block; margin-bottom: 14px; }
@@ -552,6 +575,8 @@
       .toast-wrap { position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:650; display:flex; flex-direction:column-reverse; gap:8px; align-items:center; width:min(430px,92vw); pointer-events:none; }
       .toast { pointer-events:auto; display:flex; gap:11px; align-items:flex-start; background:var(--bg2); border:1px solid var(--border-strong); border-radius:var(--radius); padding:13px 14px; box-shadow:0 14px 44px rgba(0,0,0,.55); animation:toastIn .35s cubic-bezier(.2,.8,.3,1); width:100%; }
       .toast.success { border-color:rgba(34,197,94,.45); }
+      .toast.warn { border-color:rgba(234,179,8,.5); }
+      .toast.danger { border-color:rgba(239,68,68,.55); }
       .toast .t-ic { flex:none; font-size:1.3rem; line-height:1.3; }
       .toast .t-body { flex:1; font-size:.82rem; line-height:1.55; color:var(--text); }
       .toast .t-body b { color:var(--accent); }
@@ -3049,12 +3074,12 @@
         const prev = document.getElementById('d-photo-preview');
         const geo = _diaryPhotos.filter(p => p.lat != null).length;
         prev.innerHTML = _diaryPhotos.map((p,i) =>
-          `<div style="position:relative">
-            <img src="${p.src}" alt="Photo à ajouter au carnet" style="width:64px;height:64px;object-fit:cover;border-radius:9px;border:1px solid var(--border)"/>
-            ${p.lat!=null?`<span title="📍 ${p.lat}, ${p.lng}" style="position:absolute;bottom:2px;left:2px;background:rgba(34,197,94,0.92);color:#04210f;border-radius:6px;font-size:0.58rem;padding:0 4px;font-weight:800">📍</span>`:''}
-            <button onclick="rmDiaryPhoto(${i})" style="position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:0.7rem">✕</button>
+          `<div class="dp-photo">
+            <img src="${p.src}" alt="Photo à ajouter au carnet"/>
+            ${p.lat!=null?`<span class="geo" title="📍 ${p.lat}, ${p.lng}">📍</span>`:''}
+            <button type="button" class="rm" onclick="rmDiaryPhoto(${i})" aria-label="Retirer cette photo">✕</button>
           </div>`
-        ).join('') + (_diaryPhotos.length ? `<div style="flex-basis:100%;font-size:0.74rem;color:var(--muted);margin-top:4px">${_diaryPhotos.length} photo(s) · <strong style="color:#86efac">${geo} géolocalisée(s) 📍</strong></div>` : '');
+        ).join('') + (_diaryPhotos.length ? `<div class="dp-hint">${_diaryPhotos.length} photo(s) · <strong style="color:#86efac">${geo} géolocalisée(s) 📍</strong></div>` : '');
       }
       window.rmDiaryPhoto = i => { _diaryPhotos.splice(i,1); renderDiaryPreview(); };
 
@@ -3063,6 +3088,21 @@
         const t = Math.floor((ms||0)/1000), h = Math.floor(t/3600), m = Math.floor(t%3600/60);
         return h ? `${h} h ${String(m).padStart(2,'0')}` : `${m} min`;
       }
+      // Affiche une date (ISO « 2024-06-12 » venant du <input type=date>, ou
+      // « 12/06/2024 » venant du repli toLocaleDateString) dans un format
+      // français lisible et toujours identique, quelle que soit la saisie.
+      const CB_MONTHS = ['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+      function cbFmtDate(s){
+        if (!s) return '';
+        const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+        const fr = /^(\d{2})\/(\d{2})\/(\d{4})/.exec(s);
+        let d = null;
+        if (iso) d = new Date(+iso[1], +iso[2]-1, +iso[3]);
+        else if (fr) d = new Date(+fr[3], +fr[2]-1, +fr[1]);
+        if (!d || isNaN(d.getTime())) return s;
+        return `${d.getDate()} ${CB_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+      }
+
       function loadDiary() {
         const entries = JSON.parse(localStorage.getItem('roadtrip_diary')||'[]');
         const box = document.getElementById('diary-entries');
@@ -3070,7 +3110,10 @@
         hydrateDiaryPhotos(entries).then(() => renderDiary(entries, box));
       }
       function renderDiary(entries, box) {
-        // Synthèse cumulée des étapes mesurées au GPS (carnet de bord)
+        // Synthèse cumulée : détail GPS si au moins une étape a été mesurée
+        // (Mode Pilote) ; sinon aperçu général du voyage (étapes/km/photos/
+        // date de départ) — pour qu'un carnet 100% manuel ait aussi une vue
+        // d'ensemble, pas seulement une pile d'étapes isolées.
         const rideEntries = entries.filter(e => e.ride);
         let summary = '';
         if (rideEntries.length){
@@ -3088,16 +3131,30 @@
               <div class="cb-sum-cell"><div class="v">${Math.round(maxV)}</div><div class="l">🚀 record km/h</div></div>
             </div>
           </div>`;
+        } else if (entries.length > 1){
+          const kmTotal = entries.reduce((s,e) => s + (parseFloat(e.km)||0), 0);
+          const photosTotal = entries.reduce((s,e) => s + ((e.photos&&e.photos.length)||0), 0);
+          const first = entries.slice().sort((a,b) => new Date(a.at||0) - new Date(b.at||0))[0];
+          summary = `<div class="cb-summary">
+            <h2>📔 Mon carnet de bord</h2>
+            <div style="font-size:.8rem;color:var(--muted)">${entries.length} étapes enregistrées</div>
+            <div class="cb-sum-grid">
+              <div class="cb-sum-cell"><div class="v">${entries.length}</div><div class="l">🗓️ étapes</div></div>
+              <div class="cb-sum-cell"><div class="v">${kmTotal ? Math.round(kmTotal).toLocaleString('fr-FR') : '—'}</div><div class="l">📏 km notés</div></div>
+              <div class="cb-sum-cell"><div class="v">${photosTotal}</div><div class="l">📸 photos</div></div>
+              <div class="cb-sum-cell" style="min-width:104px"><div class="v" style="font-size:1.05rem">${cbFmtDate(first && first.date) || '—'}</div><div class="l">📅 depuis le</div></div>
+            </div>
+          </div>`;
         }
         box.innerHTML = summary + entries.slice().reverse().map((e,i) => {
           const idx = entries.length-1-i;
-          const photosHtml = (e.photos&&e.photos.length) ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">${e.photos.map(ph => {
+          const photosHtml = (e.photos&&e.photos.length) ? `<div class="de-photos">${e.photos.map(ph => {
             const src = photoSrc(ph);
             if (!src) return '';
             const lat = typeof ph==='string' ? null : (ph.lat ?? null);
-            return `<div style="position:relative">
-              <img src="${src}" onclick="openImg(this.src)" alt="Photo de l'étape" style="width:88px;height:88px;object-fit:cover;border-radius:10px;border:1px solid var(--border);cursor:pointer"/>
-              ${lat!=null?`<a href="https://maps.google.com/?q=${lat},${ph.lng}" target="_blank" onclick="event.stopPropagation()" title="Lieu de la photo : ${lat}, ${ph.lng}" style="position:absolute;bottom:3px;left:3px;background:rgba(34,197,94,0.92);color:#04210f;border-radius:6px;font-size:0.6rem;padding:1px 5px;font-weight:800;text-decoration:none">📍</a>`:''}
+            return `<div class="de-photo">
+              <img src="${src}" onclick="openImg(this.src)" alt="Photo de l'étape"/>
+              ${lat!=null?`<a href="https://maps.google.com/?q=${lat},${ph.lng}" target="_blank" class="geo" onclick="event.stopPropagation()" title="Lieu de la photo : ${lat}, ${ph.lng}">📍</a>`:''}
             </div>`;
           }).join('')}</div>` : '';
           const geoCount = (e.photos||[]).filter(p => typeof p!=='string' && p.lat!=null).length;
@@ -3118,20 +3175,20 @@
             </div>` : '';
           return `
           <div class="entry">
-            <div class="entry-hd">
-              <span>${e.date}${rideBadge}</span>
-              <div style="display:flex;gap:6px">
-                <button class="btn btn-secondary" onclick="shareEntry(${idx})" style="padding:3px 10px;font-size:0.75rem">📤 Partager</button>
-                <button class="btn btn-danger" onclick="delEntry(${idx})" style="padding:3px 9px;font-size:0.75rem">✕</button>
+            <div class="de-hd">
+              <div class="de-hd-l"><span class="de-idx">Étape ${idx+1}/${entries.length}</span><span>${cbFmtDate(e.date)}</span>${rideBadge}</div>
+              <div class="de-actions">
+                <button class="btn btn-secondary" onclick="shareEntry(${idx})">📤 Partager</button>
+                <button class="btn btn-danger" onclick="delEntry(${idx})" aria-label="Supprimer cette étape">✕</button>
               </div>
             </div>
-            <div style="font-weight:700">📍 ${e.city||'Étape'} ${e.km && !e.ride ? '· '+e.km+' km':''}</div>
+            <div class="de-city">📍 ${e.city||'Étape'} ${e.km && !e.ride ? '· '+e.km+' km':''}</div>
             ${rideHtml}
-            ${e.weather?`<div style="font-size:0.8rem;color:var(--muted);margin-top:3px">${e.weather}</div>`:''}
-            ${e.fuel?`<div style="font-size:0.8rem;color:#86efac;margin-top:3px">⛽ ${e.fuel}</div>`:''}
-            ${e.notes?`<div style="font-size:0.86rem;margin-top:8px;white-space:pre-wrap">${e.notes}</div>`:''}
-            ${e.gps?`<a href="https://maps.google.com/?q=${e.gps}" target="_blank" style="font-size:0.76rem;color:var(--accent);margin-top:6px;display:inline-block;text-decoration:none">🛰️ ${e.gps}${e.gpsFromPhoto?' · 📸 position de la photo':''}</a>`:''}
-            ${geoCount?`<div style="font-size:0.72rem;color:var(--muted);margin-top:4px">${geoCount} photo(s) géolocalisée(s) — touche le 📍 sur une photo pour la carte</div>`:''}
+            ${e.weather?`<div class="de-line">${e.weather}</div>`:''}
+            ${e.fuel?`<div class="de-fuel">⛽ ${e.fuel}</div>`:''}
+            ${e.notes?`<div class="de-notes">${e.notes}</div>`:''}
+            ${e.gps?`<a href="https://maps.google.com/?q=${e.gps}" target="_blank" class="de-gps">🛰️ ${e.gps}${e.gpsFromPhoto?' · 📸 position de la photo':''}</a>`:''}
+            ${geoCount?`<div class="de-geo-note">${geoCount} photo(s) géolocalisée(s) — touche le 📍 sur une photo pour la carte</div>`:''}
             ${photosHtml}
           </div>`;
         }).join('');
@@ -3142,7 +3199,7 @@
         const entries = JSON.parse(localStorage.getItem('roadtrip_diary')||'[]');
         const e = entries[idx]; if (!e) return;
         const lines = [`🏍️ ${e.city||'Étape'}${e.km?` · ${e.km} km`:''}`];
-        if (e.date) lines.push(`📅 ${e.date}`);
+        if (e.date) lines.push(`📅 ${cbFmtDate(e.date)}`);
         if (e.ride){ const r=e.ride; lines.push(`📏 ${r.dist} km · 📊 ${r.avg} km/h moy · 🚀 ${r.max} km/h max · ⏱️ ${cbFmtDur(r.durMs)}`); if (r.fuelL) lines.push(`⛽ ~${String(r.fuelL).replace('.',',')} L (~${r.fuelEur} €)`); }
         if (e.weather) lines.push(e.weather);
         if (e.fuel) lines.push(`⛽ ${e.fuel}`);
@@ -3168,7 +3225,7 @@
         // Repli (navigateur sans partage natif, ex. Simple Browser) : copie le texte + télécharge les photos
         try { await navigator.clipboard.writeText(text); } catch(_){}
         photos.forEach((ph,i) => { const src = photoSrc(ph); if (!src) return; const a=document.createElement('a'); a.href=src; a.download=`${slug}-${i+1}.jpg`; a.click(); });
-        alert('Partage natif indisponible ici 🖥️\nLe texte de l\'étape a été copié et les photos téléchargées — tu pourras les envoyer à tes fils.\n\n👉 Sur ton iPhone (site en HTTPS), ce bouton ouvrira directement Messages / WhatsApp / AirDrop avec les photos.');
+        showToast('Partage natif indisponible ici 🖥️<br>Le texte de l\'étape a été copié et les photos téléchargées — tu pourras les envoyer à tes fils.<br><span style="color:var(--muted)">👉 Sur ton iPhone (site en HTTPS), ce bouton ouvrira directement Messages / WhatsApp / AirDrop avec les photos.</span>', { icon:'📋', duration:10000 });
       };
 
       window.openImg = src => {
@@ -3177,6 +3234,7 @@
       };
 
       window.delEntry = async (idx) => {
+        if (!confirm('Supprimer cette étape du carnet ?\n\nSes photos seront aussi supprimées. Cette action est définitive.')) return;
         const entries = JSON.parse(localStorage.getItem('roadtrip_diary')||'[]');
         const e = entries[idx];
         if (e && Array.isArray(e.photos) && PhotoDB.available()){
@@ -3198,17 +3256,19 @@
           photos: _diaryPhotos.slice(),
           at: new Date().toISOString()
         };
-        if(!entry.city && !entry.notes && !entry.photos.length){ alert('Indique au moins une ville, des notes ou une photo.'); return; }
+        if(!entry.city && !entry.notes && !entry.photos.length){ showToast('Indique au moins une ville, des notes ou une photo avant d\'enregistrer.', { type:'warn', icon:'⚠️' }); return; }
         const save = async () => {
           try { entry.photos = await persistDiaryPhotos(entry.photos); } catch(e){}
           const entries = JSON.parse(localStorage.getItem('roadtrip_diary')||'[]');
           entries.push(entry);
           try { localStorage.setItem('roadtrip_diary', JSON.stringify(entries)); }
-          catch(err){ alert('Stockage plein : trop de photos. Supprime d\'anciennes étapes.'); return; }
+          catch(err){ showToast('Stockage plein : trop de photos. Supprime d\'anciennes étapes pour libérer de la place.', { type:'danger', icon:'🚫', duration:9000 }); return; }
           _diaryPhotos = [];
           document.getElementById('d-photo-preview').innerHTML = '';
-          ['d-city','d-km','d-weather','d-notes','d-fuel'].forEach(id => document.getElementById(id).value = '');
+          ['d-city','d-km','d-weather','d-notes','d-fuel','d-date'].forEach(id => document.getElementById(id).value = '');
+          document.getElementById('d-date').dataset.touched = '';
           loadDiary();
+          showToast('Étape enregistrée dans le carnet !', { icon:'💾' });
         };
         // Priorité à la géoloc EXIF de la 1re photo (lieu réel de la prise de vue),
         // sinon position actuelle du téléphone en repli.
