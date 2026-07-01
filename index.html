@@ -32,6 +32,9 @@
       body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 22px 22px; min-height: 100vh; color: var(--text); position: relative; overflow-x: hidden; }
       body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(ellipse 70% 45% at 12% 0%, rgba(245,158,11,0.08) 0%, transparent 60%), radial-gradient(ellipse 55% 40% at 92% 85%, rgba(20,184,166,0.06) 0%, transparent 55%); pointer-events: none; z-index: 0; }
       body > * { position: relative; z-index: 1; }
+      /* ── Accessibilité : lien d'évitement ──────────────────── */
+      .skip-link { position: fixed; top: -60px; left: 12px; z-index: 1000; background: var(--accent); color: #1a1000; font-weight: 700; padding: 10px 18px; border-radius: var(--radius-sm); text-decoration: none; transition: top .15s ease; }
+      .skip-link:focus { top: 12px; }
       /* ── Scrollbar ──────────────────────────────────────── */
       ::-webkit-scrollbar { width: 5px; height: 5px; }
       ::-webkit-scrollbar-track { background: transparent; }
@@ -730,7 +733,7 @@
       .day-routes-sum.dr-home { color: #86efac; background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); font-weight: 600; }
       /* ── Print ──────────────────────────────────────────── */
       @media print {
-        header, .nav-wrap, .cmdk-overlay, #sos-fab, #install-banner, .btn, .tab-content:not(.active) { display: none !important; }
+        header, .nav-wrap, .cmdk-overlay, #sos-fab, #install-banner, .btn, .skip-link, .tab-content:not(.active) { display: none !important; }
         body { background: white; color: black; }
         .card { border: 1px solid #ccc; background: white; break-inside: avoid; }
       }
@@ -778,6 +781,7 @@
     <meta name="twitter:image" content="/icon-512.png"/>
   </head>
   <body>
+    <a href="#main-content" class="skip-link">Aller au contenu principal</a>
     <header>
       <span style="font-size:1.6rem">🏍️</span>
       <h1>Road Trip Moto</h1>
@@ -795,11 +799,13 @@
 
     <!-- Palette de commandes (Ctrl/Cmd + K) -->
     <div class="cmdk-overlay" id="cmdk">
-      <div class="cmdk-box" role="dialog" aria-label="Aller à une section">
+      <div class="cmdk-box" role="dialog" aria-modal="true" aria-label="Aller à une section">
         <input class="cmdk-input" id="cmdk-input" placeholder="Aller à… (ex. carte, essence, budget)" autocomplete="off" spellcheck="false"/>
         <div class="cmdk-list" id="cmdk-list"></div>
       </div>
     </div>
+
+    <div id="main-content" tabindex="-1" style="outline:none"></div>
 
     <!-- TAB MA MOTO -->
     <div class="tab-content" data-tab="bike">
@@ -1832,7 +1838,7 @@
 
     <!-- SOS modal -->
     <div id="sos-modal" onclick="if(event.target===this)closeSOS()">
-      <div class="sos-box">
+      <div class="sos-box" role="dialog" aria-modal="true" aria-label="Urgence">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
           <h2 style="margin:0">🆘 Urgence</h2>
           <button class="btn btn-secondary" onclick="closeSOS()" style="padding:5px 12px">✕</button>
@@ -2017,10 +2023,32 @@
         wrap.insertBefore(d, wrap.firstChild);
       }
 
+      // ── Accessibilité : piège de focus pour les modales (cmdk, SOS) ─
+      let _modalReturnFocus = null;
+      function getFocusable(container) {
+        if (!container) return [];
+        return Array.from(container.querySelectorAll(
+          'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )).filter(el => el.offsetParent !== null);
+      }
+      function trapFocus(e, container) {
+        if (e.key !== 'Tab') return;
+        const focusables = getFocusable(container);
+        if (!focusables.length) return;
+        const first = focusables[0], last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+      function rememberFocus() { _modalReturnFocus = document.activeElement; }
+      function restoreFocus() {
+        if (_modalReturnFocus && document.body.contains(_modalReturnFocus)) _modalReturnFocus.focus();
+        _modalReturnFocus = null;
+      }
+
       // ── Palette de commandes ──────────────────────────────────────
       let cmdkSel = 0, cmdkItems = [];
-      function openCmdk() { cmdk.classList.add('open'); cmdkInput.value = ''; renderCmdk(''); setTimeout(() => cmdkInput.focus(), 30); }
-      function closeCmdk() { cmdk.classList.remove('open'); }
+      function openCmdk() { rememberFocus(); cmdk.classList.add('open'); cmdkInput.value = ''; renderCmdk(''); setTimeout(() => cmdkInput.focus(), 30); }
+      function closeCmdk() { cmdk.classList.remove('open'); restoreFocus(); }
       function renderCmdk(q) {
         q = (q || '').trim().toLowerCase();
         cmdkItems = [];
@@ -2058,6 +2086,7 @@
         else if (e.key === 'ArrowDown') { e.preventDefault(); cmdkSel = Math.min(cmdkItems.length - 1, cmdkSel + 1); highlightCmdk(); }
         else if (e.key === 'ArrowUp')   { e.preventDefault(); cmdkSel = Math.max(0, cmdkSel - 1); highlightCmdk(); }
         else if (e.key === 'Enter')     { if (cmdkItems[cmdkSel]) { showTab(cmdkItems[cmdkSel]); closeCmdk(); } }
+        else if (e.key === 'Tab')       { trapFocus(e, document.querySelector('.cmdk-box')); }
       });
 
       // Hauteur d'en-tête → variable CSS (sous-nav collante sous le header)
@@ -6783,9 +6812,11 @@
           sel.dataset.init = '1'; sel.value = 'EE';
         }
         renderSOS();
+        rememberFocus();
         document.getElementById('sos-modal').classList.add('open');
+        setTimeout(() => document.querySelector('.sos-box .btn-secondary')?.focus(), 30);
       }
-      function closeSOS(){ document.getElementById('sos-modal').classList.remove('open'); speechSynthesis?.cancel(); }
+      function closeSOS(){ document.getElementById('sos-modal').classList.remove('open'); speechSynthesis?.cancel(); restoreFocus(); }
       window.openSOS = openSOS; window.closeSOS = closeSOS;
       function renderSOS(){
         const code = document.getElementById('sos-country').value;
@@ -6815,7 +6846,12 @@
         }, err => alert('Impossible d\'obtenir la position : '+err.message), { enableHighAccuracy:true, timeout:10000 });
       }
       window.shareLocation = shareLocation;
-      document.addEventListener('keydown', e => { if (e.key==='Escape') closeSOS(); });
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { closeSOS(); return; }
+        if (e.key === 'Tab' && document.getElementById('sos-modal').classList.contains('open')) {
+          trapFocus(e, document.querySelector('.sos-box'));
+        }
+      });
 
       // ── Mode Pilote (ordinateur de bord GPS) ──────────────────────
       const ride = { watch:null, timer:null, running:false, dist:0, max:0, last:null, lastT:0, t0:0, elapsed:0, speeds:[], wake:null };
