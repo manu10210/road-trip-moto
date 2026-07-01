@@ -1715,7 +1715,18 @@
     <div class="tab-content" data-tab="garage">
       <div class="wrap">
         <div class="card">
-          <h2>📋 Coffre à documents</h2>
+          <h2>� Sauvegarde complète</h2>
+          <p class="hint">Regroupe <strong>tout</strong> (plan, carnet + photos, dépenses, documents, profils moto/pilote, checklists, espace famille…) dans un seul fichier. Indispensable avant de changer de téléphone ou de réinstaller l'app.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+            <button class="btn btn-primary" id="backup-export">💾 Tout sauvegarder</button>
+            <button class="btn btn-secondary" id="backup-import-btn">📥 Restaurer une sauvegarde</button>
+            <input id="backup-import-file" type="file" accept="application/json,.json" style="display:none"/>
+          </div>
+          <p style="font-size:.74rem;color:var(--muted);margin-top:10px">ℹ️ La restauration <strong>remplace</strong> les données actuelles de cet appareil par celles du fichier choisi.</p>
+        </div>
+
+        <div class="card">
+          <h2>�📋 Coffre à documents</h2>
           <p class="hint">Permis, carte grise, assurance, passeport — stockés <strong>uniquement sur cet appareil</strong>, jamais en ligne.</p>
           <div class="alert" style="margin-top:6px">🔒 Sécurité : ces images restent dans ton navigateur. Pour un vrai coffre chiffré, garde aussi une copie ailleurs.</div>
           <div class="doc-grid" id="doc-grid"></div>
@@ -2674,6 +2685,76 @@
         if (changed){ try { localStorage.setItem('roadtrip_diary', JSON.stringify(entries)); } catch(e){} }
         try { localStorage.setItem('roadtrip_idb_migrated', '1'); } catch(e){}
       }
+
+      // ── Sauvegarde / restauration complète ─────────────────────────
+      // Regroupe TOUTES les données locales (toute clé « roadtrip_* » : plan,
+      // carnet, dépenses, documents, profils, checklists, espace famille…)
+      // + les photos du carnet (stockées à part en IndexedDB) dans un seul
+      // fichier JSON téléchargeable. Permet de tout restaurer sur un autre
+      // appareil ou après réinstallation — les documents d'identité et
+      // photos ne sont normalement stockés QUE sur cet appareil.
+      async function exportFullBackup(){
+        const btn = document.getElementById('backup-export');
+        const prevLabel = btn ? btn.textContent : '';
+        if (btn){ btn.disabled = true; btn.textContent = '⏳ Préparation…'; }
+        try {
+          const data = {};
+          for (let i = 0; i < localStorage.length; i++){
+            const k = localStorage.key(i);
+            if (k && k.indexOf('roadtrip') === 0) data[k] = localStorage.getItem(k);
+          }
+          // Photos du carnet référencées par id → hydratées depuis IndexedDB
+          const photos = {};
+          if (PhotoDB.available()){
+            try {
+              const entries = JSON.parse(data.roadtrip_diary || '[]');
+              const ids = [];
+              entries.forEach(e => (e.photos||[]).forEach(p => { if (p && typeof p === 'object' && p.id) ids.push(p.id); }));
+              await Promise.all(ids.map(async id => { const d = await PhotoDB.get(id); if (d) photos[id] = d; }));
+            } catch(e){}
+          }
+          const backup = { app:'road-trip-moto', version:1, exportedAt:new Date().toISOString(), localStorage:data, photos };
+          const blob = new Blob([JSON.stringify(backup)], { type:'application/json' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `roadtrip-sauvegarde-${new Date().toISOString().slice(0,10)}.json`;
+          a.click();
+          URL.revokeObjectURL(a.href);
+        } catch(e){
+          alert('Erreur lors de la sauvegarde : ' + e.message);
+        } finally {
+          if (btn){ btn.disabled = false; btn.textContent = prevLabel; }
+        }
+      }
+      window.exportFullBackup = exportFullBackup;
+
+      function importFullBackup(file){
+        if (!file) return;
+        if (!confirm('⚠️ Restaurer cette sauvegarde va REMPLACER toutes les données actuelles de l\'app sur cet appareil (plan, carnet, dépenses, documents, profils…).\n\nContinuer ?')) return;
+        const reader = new FileReader();
+        reader.onload = async () => {
+          try {
+            const backup = JSON.parse(reader.result);
+            if (!backup || !backup.localStorage || typeof backup.localStorage !== 'object') throw new Error('fichier de sauvegarde invalide');
+            Object.keys(localStorage).filter(k => k.indexOf('roadtrip') === 0).forEach(k => localStorage.removeItem(k));
+            Object.entries(backup.localStorage).forEach(([k,v]) => { try { localStorage.setItem(k, v); } catch(e){} });
+            if (backup.photos && PhotoDB.available()){
+              await Promise.all(Object.entries(backup.photos).map(([id, src]) => PhotoDB.put(id, src)));
+            }
+            alert('✅ Sauvegarde restaurée ! L\'app va se recharger.');
+            location.reload();
+          } catch(e){
+            alert('Erreur : fichier invalide ou corrompu (' + e.message + ')');
+          }
+        };
+        reader.readAsText(file);
+      }
+      window.importFullBackup = importFullBackup;
+      document.getElementById('backup-export').addEventListener('click', exportFullBackup);
+      document.getElementById('backup-import-btn').addEventListener('click', () => document.getElementById('backup-import-file').click());
+      document.getElementById('backup-import-file').addEventListener('change', e => {
+        const f = e.target.files[0]; importFullBackup(f); e.target.value = '';
+      });
 
       // Réduction d'image (canvas) → base64 léger, partagé Carnet + Coffre
       function downscaleImage(file, maxSize, quality){
