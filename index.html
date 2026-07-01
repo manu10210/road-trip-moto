@@ -523,16 +523,43 @@
       .cfg-leg { font-size:.66rem; font-weight:800; color:var(--violet); letter-spacing:.05em; margin-right:3px; }
       .cfg-legrow { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
       /* ── Onglet Préparer : mise en page par étapes ───────── */
+      .prep-phase-label { display:flex; align-items:center; gap:8px; font-size:.72rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:4px 0 10px; }
+      .prep-phase-label .pl-ic { font-size:1rem; }
+      .prep-phase-label::after { content:''; flex:1; height:1px; background:var(--border); }
       .prep-setup { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
       @media (max-width:640px){ .prep-setup { grid-template-columns:1fr; } }
-      .prep-step { display:flex; flex-direction:column; }
+      .prep-step { display:flex; flex-direction:column; border-top:3px solid var(--border-strong); }
+      .prep-step.acc-teal { border-top-color:var(--accent2); }
+      .prep-step.acc-violet { border-top-color:var(--violet); }
       .prep-step-hd { display:flex; align-items:center; gap:10px; margin-bottom:9px; }
       .prep-step-hd h2 { margin:0; font-size:1.05rem; }
       .prep-num { flex:none; width:26px; height:26px; border-radius:50%; display:grid; place-items:center; font-size:.82rem; font-weight:800; color:#fff; background:linear-gradient(135deg,var(--violet),var(--accent)); }
-      .prep-switch { display:flex; gap:5px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:5px; margin:12px 0 16px; }
-      .prep-switch button { flex:1; background:none; border:none; color:var(--muted); font-family:inherit; font-weight:700; font-size:.86rem; padding:11px 12px; border-radius:9px; cursor:pointer; transition:background .18s,color .18s; display:inline-flex; align-items:center; justify-content:center; gap:7px; }
-      .prep-switch button.on { background:linear-gradient(120deg,rgba(167,139,250,.3),rgba(245,158,11,.16)); color:#fff; }
+      .prep-num.n1 { background:linear-gradient(135deg,var(--accent2),#0ea5e9); }
+      .prep-num.n2 { background:linear-gradient(135deg,var(--violet),var(--pink)); }
+      /* Choix visuel du mode de planification — remplace l'ancien sélecteur en pilules */
+      .prep-choice { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin:12px 0 18px; }
+      @media (max-width:720px){ .prep-choice { grid-template-columns:1fr; } }
+      .pc-tile { display:flex; align-items:center; gap:12px; text-align:left; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:13px 14px; cursor:pointer; font-family:inherit; transition:transform .15s, border-color .18s, background .18s; }
+      .pc-tile:hover { transform:translateY(-2px); border-color:rgba(167,139,250,.45); }
+      .pc-tile .pc-ic { flex:none; width:42px; height:42px; border-radius:12px; background:var(--bg3); display:grid; place-items:center; font-size:1.35rem; transition:background .18s; }
+      .pc-tile .pc-txt { display:flex; flex-direction:column; gap:2px; min-width:0; }
+      .pc-tile .pc-t { font-weight:800; font-size:.88rem; color:var(--text); }
+      .pc-tile .pc-d { font-size:.71rem; color:var(--muted); line-height:1.35; }
+      .pc-tile.on { background:linear-gradient(120deg,rgba(167,139,250,.22),rgba(245,158,11,.13)); border-color:rgba(167,139,250,.6); }
+      .pc-tile.on .pc-ic { background:linear-gradient(135deg,var(--violet),var(--accent)); }
       .prep-pane { animation:retIn .4s cubic-bezier(.2,.7,.3,1); }
+      /* ── Toasts : confirmations non bloquantes (remplacent alert()) ─ */
+      .toast-wrap { position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom)); transform:translateX(-50%); z-index:650; display:flex; flex-direction:column-reverse; gap:8px; align-items:center; width:min(430px,92vw); pointer-events:none; }
+      .toast { pointer-events:auto; display:flex; gap:11px; align-items:flex-start; background:var(--bg2); border:1px solid var(--border-strong); border-radius:var(--radius); padding:13px 14px; box-shadow:0 14px 44px rgba(0,0,0,.55); animation:toastIn .35s cubic-bezier(.2,.8,.3,1); width:100%; }
+      .toast.success { border-color:rgba(34,197,94,.45); }
+      .toast .t-ic { flex:none; font-size:1.3rem; line-height:1.3; }
+      .toast .t-body { flex:1; font-size:.82rem; line-height:1.55; color:var(--text); }
+      .toast .t-body b { color:var(--accent); }
+      .toast .t-close { flex:none; background:none; border:none; color:var(--muted); font-size:1rem; cursor:pointer; padding:2px 4px; border-radius:6px; }
+      .toast .t-close:hover { color:var(--text); background:rgba(255,255,255,.08); }
+      @keyframes toastIn { from{ opacity:0; transform:translateY(16px) scale(.95); } to{ opacity:1; transform:none; } }
+      @keyframes toastOut { to{ opacity:0; transform:translateY(10px) scale(.96); } }
+      @media (prefers-reduced-motion:reduce){ .toast{ animation:none; } }
       /* ── Itinéraire guidé selon l'état (POI) ───────────── */
       .mood-pick { display:flex; flex-wrap:wrap; gap:9px; margin-top:12px; }
       .mood-chip { display:flex; flex-direction:column; align-items:flex-start; gap:2px; text-align:left; padding:10px 14px; border-radius:var(--radius); border:1px solid var(--border); background:var(--bg2); cursor:pointer; font-family:inherit; min-width:124px; flex:1 1 124px; max-width:180px; transition:transform .15s, border-color .18s, background .18s; }
@@ -944,9 +971,10 @@
         <div class="card" id="today-card" style="display:none"></div>
 
         <!-- ÉTAPES 1 & 2 — l'essentiel, côte à côte -->
+        <div class="prep-phase-label"><span class="pl-ic">&#x1F9ED;</span> Avant de partir</div>
         <div class="prep-setup">
-          <div class="card prep-step">
-            <div class="prep-step-hd"><span class="prep-num">1</span><h2>&#x1F3C1; D'où pars-tu&nbsp;?</h2></div>
+          <div class="card prep-step acc-teal">
+            <div class="prep-step-hd"><span class="prep-num n1">1</span><h2>&#x1F3C1; D'où pars-tu&nbsp;?</h2></div>
             <p class="hint">Ta ville de départ — <strong id="o-default-name">Troyes</strong> par défaut. Carte, étapes, distances et budget s'y adaptent.</p>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
               <div style="flex:1;min-width:150px"><label>Ville de départ</label><input id="o-city" placeholder="ex. Lyon, Paris…"/></div>
@@ -955,8 +983,8 @@
             </div>
             <div id="o-status" class="nearme-status" style="display:none"></div>
           </div>
-          <div class="card prep-step">
-            <div class="prep-step-hd"><span class="prep-num">2</span><h2>&#x1F4C5; Quand pars-tu&nbsp;?</h2></div>
+          <div class="card prep-step acc-violet">
+            <div class="prep-step-hd"><span class="prep-num n2">2</span><h2>&#x1F4C5; Quand pars-tu&nbsp;?</h2></div>
             <p class="hint">Choisis ta <strong>date de départ</strong> — le retour se pré-remplit tout seul.</p>
             <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
               <div style="flex:1;min-width:120px"><label>&#x1F4C5; Départ</label><input id="cd-date" type="date"/></div>
@@ -980,10 +1008,19 @@
         <div class="card cfg-card">
           <div class="prep-step-hd"><span class="prep-num">3</span><h2>&#x1F9ED; Choisis ton voyage</h2></div>
           <div class="cfg-from" id="cfg-preset-from"></div>
-          <div class="prep-switch" id="prep-switch">
-            <button type="button" data-pane="presets" class="on">&#x1F5FA;&#xFE0F; Itinéraires prêts</button>
-            <button type="button" data-pane="custom">&#x1F39B;&#xFE0F; Sur-mesure</button>
-            <button type="button" data-pane="manual">&#x1F6E0;&#xFE0F; Manuel</button>
+          <div class="prep-choice" id="prep-switch">
+            <button type="button" data-pane="presets" class="pc-tile on">
+              <span class="pc-ic">&#x1F5FA;&#xFE0F;</span>
+              <span class="pc-txt"><span class="pc-t">Itinéraires prêts</span><span class="pc-d">5 jours déjà tracés, prêts à partir</span></span>
+            </button>
+            <button type="button" data-pane="custom" class="pc-tile">
+              <span class="pc-ic">&#x1F39B;&#xFE0F;</span>
+              <span class="pc-txt"><span class="pc-t">Sur-mesure</span><span class="pc-d">Ton budget, ton temps, tes envies</span></span>
+            </button>
+            <button type="button" data-pane="manual" class="pc-tile">
+              <span class="pc-ic">&#x1F6E0;&#xFE0F;</span>
+              <span class="pc-txt"><span class="pc-t">Manuel</span><span class="pc-d">Tu règles chaque détail toi-même</span></span>
+            </button>
           </div>
 
           <!-- Pane : itinéraires 5 jours prêts à l'emploi -->
@@ -2045,6 +2082,43 @@
         if (_modalReturnFocus && document.body.contains(_modalReturnFocus)) _modalReturnFocus.focus();
         _modalReturnFocus = null;
       }
+
+      // ── Toasts : confirmations visuelles non bloquantes (remplacent alert()) ─
+      // Utilisé notamment par le configurateur de voyage : choisir un itinéraire
+      // ne doit pas interrompre l'expérience avec une popup système grise.
+      function showToast(html, opts) {
+        opts = opts || {};
+        let wrap = document.getElementById('toast-wrap');
+        if (!wrap) {
+          wrap = document.createElement('div');
+          wrap.id = 'toast-wrap';
+          wrap.className = 'toast-wrap';
+          document.body.appendChild(wrap);
+        }
+        const el = document.createElement('div');
+        el.className = 'toast' + (opts.type ? ' ' + opts.type : ' success');
+        el.setAttribute('role', 'status');
+        el.innerHTML = '<span class="t-ic">' + (opts.icon || '✅') + '</span>'
+          + '<div class="t-body">' + html + '</div>'
+          + '<button type="button" class="t-close" aria-label="Fermer">✕</button>';
+        wrap.appendChild(el);
+        const kill = () => { el.style.animation = 'toastOut .25s ease forwards'; setTimeout(() => el.remove(), 260); };
+        el.querySelector('.t-close').addEventListener('click', kill);
+        setTimeout(kill, opts.duration || 7000);
+      }
+      window.showToast = showToast;
+      // Fait défiler jusqu'au résultat (fiche route) une fois un voyage choisi —
+      // la fiche est déjà à jour à ce stade (applyOriginLabels → renderPrepareRoute
+      // est synchrone), pas besoin d'attendre la fin de l'appel réseau generatePlan.
+      function scrollToPrepareResult() {
+        setTimeout(() => {
+          const el = document.getElementById('prepare-route-card');
+          if (el && el.children.length) { el.scrollIntoView({ behavior:'smooth', block:'start' }); return; }
+          const cfg = document.querySelector('.cfg-card');
+          if (cfg) cfg.scrollIntoView({ behavior:'smooth', block:'start' });
+        }, 60);
+      }
+      window.scrollToPrepareResult = scrollToPrepareResult;
 
       // ── Palette de commandes ──────────────────────────────────────
       let cmdkSel = 0, cmdkItems = [];
@@ -3892,15 +3966,13 @@
         // Régénère aussitôt le plan complet (essence, budget, hébergement…) — plus
         // besoin d'aller chercher un bouton « Générer » ailleurs sur la page.
         try { generatePlan({ silent: true }); } catch(e){}
-        const EM = String.fromCodePoint;
-        const via = m.stopsOut.length ? ('\n' + EM(0x1F6D1) + ' Via : ' + m.stopsOut.map(s => s.name).join(' \u00b7 ')) : '';
-        const viaRet = (loop && m.stopsRet.length) ? ('\n' + EM(0x21A9,0xFE0F) + ' Retour par : ' + m.stopsRet.map(s => s.name).join(' \u00b7 ')) : '';
+        const via = m.stopsOut.length ? (' · via ' + m.stopsOut.map(s => s.name).join(' · ')) : '';
+        const viaRet = (loop && m.stopsRet.length) ? (' · retour par ' + m.stopsRet.map(s => s.name).join(' · ')) : '';
         const sched = m.fitTime ? (m.rideDays + ' j de route + ' + m.onSite + ' j sur place') : ('pr\u00e9vois ~' + m.recoDays + ' jours');
-        alert(EM(0x2B50) + ' Destination choisie : ' + cfgFlag(d.cc) + ' ' + d.name
-          + '\n\n' + EM(0x1F4CF) + ' ' + m.rt.toLocaleString('fr-FR') + ' km ' + (loop ? 'en boucle' : 'aller-retour') + via + viaRet
-          + '\n' + EM(0x1F5D3,0xFE0F) + ' ' + sched
-          + '\n' + EM(0x1F4B0) + ' Budget estim\u00e9 : ' + cfgEur(m.total)
-          + '\n\nCarte, \u00e9tapes, plan et budget sont \u00e0 jour. ' + EM(0x1F9ED) + ' Ouvre l\'itin\u00e9raire ' + (loop ? 'boucle' : 'Google') + ' depuis la carte.');
+        showToast('<b>' + cfgFlag(d.cc) + ' ' + d.name + '</b> choisi — ' + m.rt.toLocaleString('fr-FR') + ' km ' + (loop ? 'en boucle' : 'aller-retour') + via + viaRet
+          + '<br>🗓️ ' + sched + ' · 💰 ' + cfgEur(m.total)
+          + '<br><span style="color:var(--muted)">Carte, étapes et budget mis à jour ci-dessous ⬇️</span>', { icon:'⭐' });
+        scrollToPrepareResult();
       };
 
       // ── Itinéraires 5 jours clés en main (partout en Europe) ──────
@@ -4107,16 +4179,13 @@
         // Régénère aussitôt le plan complet (essence, budget, hébergement…) — plus
         // besoin d'aller chercher un bouton « Générer » ailleurs sur la page.
         try { generatePlan({ silent: true }); } catch(e){}
-        const EM = String.fromCodePoint;
         const approachTxt = m.nearby
           ? 'Tu es déjà sur place !'
           : '~' + m.approachKm.toLocaleString('fr-FR') + ' km d\'approche (~' + m.approachDays + ' j) · ~' + m.days + ' j porte-à-porte';
-        alert(EM(0x2B50) + ' Itinéraire choisi : ' + p.emoji + ' ' + p.title
-          + '\n\n' + EM(0x1F3E0) + ' Départ : ' + o.name
-          + '\n' + EM(0x1F5FA,0xFE0F) + ' ' + o.name + ' → ' + p.cities.map(c => c.name).join(' → ') + (p.loop ? ' ↩️ ' + o.name : '')
-          + '\n' + EM(0x1F6E3,0xFE0F) + ' ' + approachTxt
-          + '\n' + EM(0x1F4B0) + ' Budget estimé : ' + cfgEur(m.total)
-          + '\n\nTa ville de départ est intégrée. Carte, étapes, hébergement et budget sont à jour. ' + EM(0x1F9ED));
+        showToast('<b>' + p.emoji + ' ' + p.title + '</b> choisi — ' + o.name + ' → ' + p.cities.map(c => c.name).join(' → ') + (p.loop ? ' ↩️ ' + o.name : '')
+          + '<br>🛣️ ' + approachTxt + ' · 💰 ' + cfgEur(m.total)
+          + '<br><span style="color:var(--muted)">Carte, hébergement et budget mis à jour ci-dessous ⬇️</span>', { icon:'⭐' });
+        scrollToPrepareResult();
       };
       function initConfigurator(){
         const from = document.getElementById('cfg-from');
