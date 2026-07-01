@@ -119,6 +119,16 @@
       /* ── Diary ──────────────────────────────────────────── */
       .diary-hero { background:linear-gradient(125deg, rgba(245,158,11,0.14), rgba(167,139,250,0.08) 55%, rgba(20,184,166,0.09)); border:1px solid rgba(245,158,11,0.3); position:relative; overflow:hidden; }
       .diary-hero::before { content:''; position:absolute; right:-40px; top:-40px; width:180px; height:180px; border-radius:50%; background:radial-gradient(circle, rgba(245,158,11,0.2), transparent 70%); pointer-events:none; }
+      /* Carte interactive du voyage (toutes les étapes géolocalisées) */
+      .diary-map-card { padding:0; overflow:hidden; }
+      .diary-map-hd { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:15px 16px 12px; flex-wrap:wrap; }
+      .diary-map-hd h2 { margin:0; }
+      .diary-map { height:300px; width:100%; background:var(--bg2); }
+      .diary-pin { position:relative; width:26px; height:26px; }
+      .diary-pin .b { position:absolute; inset:0; border-radius:50% 50% 50% 0; transform:rotate(45deg); background:linear-gradient(135deg,var(--violet),var(--accent)); border:2px solid #fff; box-shadow:0 3px 8px rgba(0,0,0,.5); }
+      .diary-pin.last .b { background:linear-gradient(135deg,#fbbf24,#f59e0b); box-shadow:0 0 0 4px rgba(245,158,11,0.28), 0 3px 8px rgba(0,0,0,.5); }
+      .diary-pin .n { position:absolute; inset:0; display:grid; place-items:center; color:#fff; font-weight:800; font-size:.72rem; z-index:1; }
+      .diary-pop-img { width:100%; height:92px; object-fit:cover; border-radius:8px; margin-top:7px; }
       .wpick { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
       .wpick-chip { font-size:.74rem; padding:5px 11px; border-radius:20px; background:var(--bg2); border:1px solid var(--border); color:var(--text); cursor:pointer; font-family:inherit; transition:border-color .15s, background .15s, transform .15s; }
       .wpick-chip:hover { border-color:var(--accent); background:rgba(245,158,11,0.1); transform:translateY(-1px); }
@@ -3133,8 +3143,69 @@
       function loadDiary() {
         const entries = JSON.parse(localStorage.getItem('roadtrip_diary')||'[]');
         const box = document.getElementById('diary-entries');
-        if(!entries.length){ box.innerHTML = '<div class="empty"><span class="ic">📝</span><p>Aucune étape enregistrée.</p></div>'; return; }
+        if(!entries.length){ box.innerHTML = '<div class="empty"><span class="ic">📝</span><p>Aucune étape enregistrée.</p><button class="btn btn-secondary" style="margin-top:8px" onclick="diaryDemoPreview()">🗺️ Voir un exemple de carte de voyage</button></div>'; return; }
         hydrateDiaryPhotos(entries).then(() => renderDiary(entries, box));
+      }
+      // Aperçu de démonstration (en mémoire, jamais enregistré) : montre à quoi
+      // ressemble la carte du voyage une fois des étapes géolocalisées ajoutées.
+      // Un changement d'onglet recharge le vrai carnet (vide) via loadDiary().
+      const DIARY_DEMO = [
+        { date:'2026-07-04', city:'Troyes', km:'0',   gps:'48.2973, 4.0744', photos:[], at:'2026-07-04T09:00:00Z' },
+        { date:'2026-07-05', city:'Strasbourg', km:'340', gps:'48.5734, 7.7521', photos:[], at:'2026-07-05T18:00:00Z' },
+        { date:'2026-07-06', city:'Munich', km:'420', gps:'48.1351, 11.5820', photos:[], at:'2026-07-06T18:00:00Z' },
+        { date:'2026-07-07', city:'Berlin', km:'585', gps:'52.5200, 13.4050', photos:[], at:'2026-07-07T18:00:00Z' },
+        { date:'2026-07-08', city:'Varsovie', km:'575', gps:'52.2297, 21.0122', photos:[], at:'2026-07-08T18:00:00Z' },
+        { date:'2026-07-09', city:'Kaunas', km:'450', gps:'54.8985, 23.9036', photos:[], at:'2026-07-09T18:00:00Z' },
+        { date:'2026-07-10', city:'Riga', km:'265', gps:'56.9496, 24.1052', photos:[], at:'2026-07-10T18:00:00Z' },
+        { date:'2026-07-11', city:'Tallinn', km:'310', gps:'59.4370, 24.7536', photos:[], at:'2026-07-11T18:00:00Z' }
+      ];
+      window.diaryDemoPreview = () => {
+        renderDiary(DIARY_DEMO, document.getElementById('diary-entries'));
+        showToast('Aperçu de démo <b>France → Estonie</b> 🇫🇷→🇪🇪<br><span style="color:var(--muted)">Rien n\'est enregistré. Change d\'onglet pour revenir à ton carnet.</span>', { icon:'🗺️', duration:9000 });
+      };
+      // Coordonnées [lat,lng] d'une étape : priorité au GPS enregistré (photo EXIF
+      // ou position du téléphone), repli sur la 1re photo géolocalisée. null sinon.
+      function entryLatLng(e){
+        if (e && e.gps){ const p = String(e.gps).split(',').map(s => parseFloat(s.trim())); if (p.length>=2 && isFinite(p[0]) && isFinite(p[1])) return [p[0],p[1]]; }
+        if (e && Array.isArray(e.photos)){ const ph = e.photos.find(x => x && typeof x==='object' && x.lat!=null); if (ph) return [ph.lat, ph.lng]; }
+        return null;
+      }
+      // Carte interactive de tout le voyage : un pin numéroté par étape,
+      // reliés par le tracé du parcours. Réutilise Leaflet (comme la carte Famille).
+      let _diaryMap = null;
+      function diaryPinIcon(label, cls){
+        return L.divIcon({ html:'<div class="diary-pin '+(cls||'')+'"><span class="b"></span><span class="n">'+label+'</span></div>', className:'', iconSize:[26,26], iconAnchor:[13,26], popupAnchor:[0,-24] });
+      }
+      function renderDiaryMap(entries){
+        const host = document.getElementById('diary-map');
+        if (!host || typeof L === 'undefined') return;
+        const pts = [];
+        entries.forEach((e,i) => { const ll = entryLatLng(e); if (ll) pts.push({ lat:ll[0], lng:ll[1], e, n:i+1 }); });
+        const badge = document.getElementById('diary-map-count');
+        if (badge) badge.textContent = '📍 ' + pts.length + ' lieu' + (pts.length>1?'x':'');
+        if (!pts.length) return;
+        if (_diaryMap){ try { _diaryMap.remove(); } catch(_){} _diaryMap = null; }
+        _diaryMap = L.map('diary-map', { zoomControl:true, attributionControl:false, scrollWheelZoom:false }).setView([pts[0].lat, pts[0].lng], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:18 }).addTo(_diaryMap);
+        if (pts.length>=2){
+          L.polyline(pts.map(p => [p.lat,p.lng]), { color:'#f59e0b', weight:3, opacity:.85, dashArray:'6 8' }).addTo(_diaryMap);
+        }
+        pts.forEach((p,i) => {
+          const isLast = i===pts.length-1;
+          const e = p.e;
+          const src = (e.photos && e.photos.length) ? photoSrc(e.photos[0]) : '';
+          const thumb = src ? '<img src="'+src+'" alt="" class="diary-pop-img"/>' : '';
+          L.marker([p.lat,p.lng], { icon: diaryPinIcon(p.n, isLast?'last':'') }).addTo(_diaryMap)
+            .bindPopup('<b>📍 '+famEsc(e.city||('Étape '+p.n))+'</b>'
+              + (e.date?'<br><span style="color:var(--muted);font-size:.8rem">'+famEsc(cbFmtDate(e.date))+'</span>':'')
+              + (e.km && !e.ride?'<span style="color:var(--muted);font-size:.8rem"> · '+famEsc(e.km)+' km</span>':'')
+              + thumb);
+        });
+        try {
+          if (pts.length>=2) _diaryMap.fitBounds(pts.map(p => [p.lat,p.lng]), { padding:[34,34], maxZoom:11 });
+          else _diaryMap.setView([pts[0].lat, pts[0].lng], 9);
+        } catch(_){}
+        setTimeout(() => { try { _diaryMap.invalidateSize(); } catch(_){} }, 180);
       }
       function renderDiary(entries, box) {
         // Synthèse cumulée : détail GPS si au moins une étape a été mesurée
@@ -3173,7 +3244,15 @@
             </div>
           </div>`;
         }
-        box.innerHTML = summary + '<div class="de-timeline">' + entries.slice().reverse().map((e,i) => {
+        const anyGeo = entries.some(e => entryLatLng(e));
+        const mapCard = anyGeo ? `<div class="card diary-map-card">
+            <div class="diary-map-hd">
+              <div><h2>🗺️ Ta carte de voyage</h2><div style="font-size:.78rem;color:var(--muted);margin-top:2px">Chaque étape géolocalisée, reliée par ton parcours</div></div>
+              <span class="cb-badge" id="diary-map-count"></span>
+            </div>
+            <div id="diary-map" class="diary-map"></div>
+          </div>` : '';
+        box.innerHTML = mapCard + summary + '<div class="de-timeline">' + entries.slice().reverse().map((e,i) => {
           const idx = entries.length-1-i;
           const allPhotos = e.photos || [];
           // 1re photo = « couverture » façon carte postale en haut de l'étape ;
@@ -3235,6 +3314,7 @@
             </div>
           </div>`;
         }).join('') + '</div>';
+        if (anyGeo) renderDiaryMap(entries);
       }
 
       // Partage natif (iPhone : Messages, WhatsApp, AirDrop…) pour envoyer une étape à tes fils
