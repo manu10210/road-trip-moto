@@ -332,6 +332,9 @@
       .ride-cell .l { font-size:.62rem; color:var(--muted); margin-top:6px; text-transform:uppercase; letter-spacing:.05em; }
       .ride-gps { text-align:center; font-size:.8rem; color:var(--muted); font-variant-numeric:tabular-nums; margin:4px 0 10px; }
       .ride-gps.weak { color:#fca5a5; }
+      .ride-border { max-width:430px; width:100%; align-self:center; text-align:center; font-size:.82rem; font-weight:700; padding:9px 14px; border-radius:var(--radius-sm); margin:0 0 10px; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.35); color:var(--accent); display:none; }
+      .ride-border.show { display:block; }
+      .ride-border.done { background:rgba(34,197,94,0.12); border-color:rgba(34,197,94,0.35); color:#86efac; }
       .ride-controls { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; max-width:430px; width:100%; align-self:center; margin-top:auto; padding-bottom:4px; }
       .ride-controls .btn { flex:1; min-width:130px; padding:13px; font-size:.95rem; }
       /* ── Dépenses ───────────────────────────────────────── */
@@ -1808,6 +1811,7 @@
         <div class="ride-cell"><div class="v" id="ride-avg">0</div><div class="l">📊 Moy km/h</div></div>
       </div>
       <div class="ride-gps" id="ride-gps">📍 En attente du signal GPS…</div>
+      <div class="ride-border" id="ride-border"></div>
       <div class="ride-controls">
         <button class="btn btn-primary" id="ride-start" onclick="toggleRide()">▶️ Démarrer</button>
         <button class="btn btn-secondary" onclick="resetRide()">🔄 Réinitialiser</button>
@@ -4137,6 +4141,8 @@
       ];
       const _ccOrder = EU_COUNTRIES.map(c => c.cc);
       const _flag = cc => cc.toUpperCase().replace(/[A-Z]/g, c => String.fromCodePoint(127397 + c.charCodeAt(0)));
+      // Drapeau emoji → nom de pays (pour l'alerte frontière du Mode Pilote).
+      const FLAG_TO_NAME = Object.fromEntries(EU_COUNTRIES.map(c => [_flag(c.cc), c.name]));
       function _cpickGet(){
         return (document.getElementById('f-countries').value || '')
           .split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
@@ -6747,6 +6753,46 @@
         return (toD(Math.atan2(y,x))+360)%360;
       }
 
+      // ── Frontière en direct (Mode Pilote) ──────────────────────────
+      // Projette la position GPS sur le tronçon le plus proche de ROUTE_WP
+      // (via cfgProject, déjà utilisé par le configurateur) pour savoir où
+      // on se trouve sur la route, puis cherche en avant le prochain
+      // changement de drapeau (= frontière) et cumule les km réels de
+      // chaque tronçon jusque-là. Si trop loin de la route connue (retour,
+      // séjour sur place...) → aucune alerte, pour ne jamais afficher une
+      // info trompeuse.
+      function computeNextBorder(cur){
+        if (typeof ROUTE_WP === 'undefined' || ROUTE_WP.length < 2) return null;
+        let bestI = 0, bestPerp = Infinity, bestT = 0;
+        for (let i = 0; i < ROUTE_WP.length - 1; i++){
+          const pr = cfgProject(ROUTE_WP[i], ROUTE_WP[i+1], cur);
+          if (pr.perp < bestPerp){ bestPerp = pr.perp; bestI = i; bestT = pr.t; }
+        }
+        if (bestPerp > 50) return null; // hors route connue (retour, séjour…)
+        const t = Math.max(0, Math.min(1, bestT));
+        let distKm = (ROUTE_WP[bestI+1].km || 0) * (1 - t);
+        for (let k = bestI + 1; k < ROUTE_WP.length; k++){
+          if (ROUTE_WP[k].flag !== ROUTE_WP[k-1].flag){
+            return { km: Math.max(0, Math.round(distKm)), country: ROUTE_WP[k] };
+          }
+          if (k + 1 < ROUTE_WP.length) distKm += (ROUTE_WP[k+1].km || 0);
+        }
+        return null; // plus de frontière à venir (dernier pays)
+      }
+      function renderRideBorder(b){
+        const el = document.getElementById('ride-border');
+        if (!el) return;
+        if (!b){ el.className = 'ride-border'; el.textContent = ''; return; }
+        const name = FLAG_TO_NAME[b.country.flag] || b.country.name;
+        if (b.km <= 2){
+          el.className = 'ride-border show done';
+          el.textContent = `🎉 Bienvenue en ${name} ${b.country.flag} !`;
+        } else {
+          el.className = 'ride-border show';
+          el.textContent = `🛂 Frontière ${name} ${b.country.flag} dans ~${b.km.toLocaleString('fr-FR')} km`;
+        }
+      }
+
       function toggleRide(){ ride.running ? stopRide() : startRide(); }
       window.toggleRide = toggleRide;
 
@@ -6782,6 +6828,7 @@
         document.getElementById('ride-start').innerHTML='▶️ Démarrer';
         setRideStatus('idle','● GPS OFF');
         const g=document.getElementById('ride-gps'); g.className='ride-gps'; g.textContent='📍 En attente du signal GPS…';
+        try { renderRideBorder(null); } catch(e){}
       }
       window.resetRide = resetRide;
 
@@ -6869,6 +6916,7 @@
         const g = document.getElementById('ride-gps');
         g.className = 'ride-gps' + (acc>35?' weak':'');
         g.textContent = `📍 ${cur.lat.toFixed(5)}, ${cur.lng.toFixed(5)} · précision ±${Math.round(acc)} m`;
+        try { renderRideBorder(computeNextBorder(cur)); } catch(e){}
       }
       function onRideErr(err){
         const g = document.getElementById('ride-gps');
