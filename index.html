@@ -2894,7 +2894,7 @@
         const geo = _diaryPhotos.filter(p => p.lat != null).length;
         prev.innerHTML = _diaryPhotos.map((p,i) =>
           `<div style="position:relative">
-            <img src="${p.src}" style="width:64px;height:64px;object-fit:cover;border-radius:9px;border:1px solid var(--border)"/>
+            <img src="${p.src}" alt="Photo à ajouter au carnet" style="width:64px;height:64px;object-fit:cover;border-radius:9px;border:1px solid var(--border)"/>
             ${p.lat!=null?`<span title="📍 ${p.lat}, ${p.lng}" style="position:absolute;bottom:2px;left:2px;background:rgba(34,197,94,0.92);color:#04210f;border-radius:6px;font-size:0.58rem;padding:0 4px;font-weight:800">📍</span>`:''}
             <button onclick="rmDiaryPhoto(${i})" style="position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;font-size:0.7rem">✕</button>
           </div>`
@@ -2940,7 +2940,7 @@
             if (!src) return '';
             const lat = typeof ph==='string' ? null : (ph.lat ?? null);
             return `<div style="position:relative">
-              <img src="${src}" onclick="openImg(this.src)" style="width:88px;height:88px;object-fit:cover;border-radius:10px;border:1px solid var(--border);cursor:pointer"/>
+              <img src="${src}" onclick="openImg(this.src)" alt="Photo de l'étape" style="width:88px;height:88px;object-fit:cover;border-radius:10px;border:1px solid var(--border);cursor:pointer"/>
               ${lat!=null?`<a href="https://maps.google.com/?q=${lat},${ph.lng}" target="_blank" onclick="event.stopPropagation()" title="Lieu de la photo : ${lat}, ${ph.lng}" style="position:absolute;bottom:3px;left:3px;background:rgba(34,197,94,0.92);color:#04210f;border-radius:6px;font-size:0.6rem;padding:1px 5px;font-weight:800;text-decoration:none">📍</a>`:''}
             </div>`;
           }).join('')}</div>` : '';
@@ -3255,7 +3255,7 @@
             document.getElementById('fam-gallery').innerHTML = t.photos.slice().reverse().map(p => {
               const src = photoSrc(p);
               if (!src) return '';
-              return '<div class="fam-photo" onclick="openImg(this.querySelector(\'img\').src)"><img src="' + src + '" loading="lazy"/>' + (p.city ? '<span class="tag">' + famEsc(p.city) + '</span>' : '') + '</div>';
+              return '<div class="fam-photo" onclick="openImg(this.querySelector(\'img\').src)"><img src="' + src + '" alt="' + (p.city ? famEsc(p.city) : 'Photo du voyage') + '" loading="lazy"/>' + (p.city ? '<span class="tag">' + famEsc(p.city) + '</span>' : '') + '</div>';
             }).join('');
           });
         } else photoCard.style.display = 'none';
@@ -3393,7 +3393,7 @@
         'var cells=[["🗓️",D.dayLabel,"du voyage"]];if(D.remain!=null)cells.push(["🏠",D.remain+" j","avant le retour"]);cells.push(["🛣️",(D.km||0)+" km","parcourus"]);cells.push(["📸",(D.photos||[]).length+"","photos"]);',
         'h+=\'<div class="card"><h2>🗺️ Le voyage</h2><div class="grid">\';for(var i=0;i<cells.length;i++)h+=\'<div class="cell"><div class="v">\'+cells[i][0]+" "+cells[i][1]+\'</div><div class="l">\'+cells[i][2]+\'</div></div>\';h+=\'</div></div>\';',
         'if((D.videos||[]).length){h+=\'<div class="card"><h2>🎬 Les vidéos</h2>\';for(var i=0;i<D.videos.length;i++){var v=D.videos[i],id=ytId(v.url);if(id)h+=\'<div class="embed"><iframe src="https://www.youtube.com/embed/\'+id+\'" allowfullscreen></iframe></div>\';else h+=\'<a class="vid" href="\'+esc(v.url)+\'" target="_blank">▶️ \'+esc(v.label)+\'</a>\';}h+=\'</div>\';}',
-        'if((D.photos||[]).length){h+=\'<div class="card"><h2>📸 Les photos</h2><div class="gallery">\';for(var i=D.photos.length-1;i>=0;i--)h+=\'<img src="\'+D.photos[i].src+\'"/>\';h+=\'</div></div>\';}',
+        'if((D.photos||[]).length){h+=\'<div class="card"><h2>📸 Les photos</h2><div class="gallery">\';for(var i=D.photos.length-1;i>=0;i--)h+=\'<img src="\'+D.photos[i].src+\'" alt="Photo du voyage de Papa"/>\';h+=\'</div></div>\';}',
         'h+=\'<p class="center" style="color:#8aa0c0;font-size:.75rem">Mis à jour le \'+esc(D.built)+\'</p>\';a.innerHTML=h;}',
         '<\/script></body></html>'
       ].join('\n');
