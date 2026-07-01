@@ -18,7 +18,7 @@ const body = `
   ${one(/const _retNum = [^\n]+;/, '_retNum')}
   ${slice('function returnCost(route){', 'function returnDates(route){')}
   ${slice('function returnDates(route){', 'let _returnInit = false;')}
-  ${one(/const RETURN_ROUTES = \[[\s\S]*?\n      \];/, 'RETURN_ROUTES')}
+  ${one(/const RETURN_ROUTES = \[[\s\S]*?\n {6}\];/, 'RETURN_ROUTES')}
   return { RETURN_ROUTES, returnCost, returnDates };
 `;
 const ret = new Function('document', 'localStorage', body)(DOC, LS);

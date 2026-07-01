@@ -4,7 +4,7 @@
  * Peut être appelé indépendamment de /api/trip.
  */
 
-const { getCountry, TOLL_INFO } = require("../lib/countries");
+const { getCountry } = require("../lib/countries");
 
 function toNumber(value, fallback) {
   const parsed = Number(value);

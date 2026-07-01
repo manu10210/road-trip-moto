@@ -4,7 +4,8 @@
   "description": "Assistant Vercel pour préparer un road trip moto (essence, frontières, hébergements biker-friendly)",
   "private": true,
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "lint": "eslint ."
   },
   "engines": {
     "node": "24.x"
@@ -16,5 +17,11 @@
     "travel",
     "api"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.6.0",
+    "eslint-plugin-html": "^8.1.4",
+    "globals": "^17.7.0"
+  }
 }

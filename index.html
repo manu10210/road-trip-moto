@@ -1982,7 +1982,7 @@
           `<div class="subnav-right">${modeBtn}<button class="nav-search" id="nav-search" title="Rechercher (Ctrl/Cmd + K)"><span>🔎</span><span class="ns-label">Aller à…</span> <kbd>Ctrl K</kbd></button></div>`;
         subnavEl.querySelectorAll('.subtab').forEach(b =>
           b.addEventListener('click', () => showTab(b.dataset.tab)));
-        document.getElementById('nav-mode').addEventListener('click', () => toggleNavMode());
+        document.getElementById('nav-mode').addEventListener('click', () => window.toggleNavMode());
         document.getElementById('nav-search').addEventListener('click', openCmdk);
         // Centre l'onglet actif dans la barre qui défile
         const act = subnavEl.querySelector('.subtab.active');
@@ -2278,7 +2278,7 @@
       function computePilote(p){
         p = p || loadPilote();
         const imc = p.weight / Math.pow(p.height/100, 2);
-        let imcCat = 'Normal';
+        let imcCat;
         if (imc < 18.5) imcCat = 'Léger'; else if (imc < 25) imcCat = 'Normal';
         else if (imc < 30) imcCat = 'Surpoids'; else imcCat = 'Élevé';
         let breakMin = 75, maxKm = 260, helmetMax = 1500;
@@ -3435,6 +3435,7 @@
         'if((D.videos||[]).length){h+=\'<div class="card"><h2>🎬 Les vidéos</h2>\';for(var i=0;i<D.videos.length;i++){var v=D.videos[i],id=ytId(v.url);if(id)h+=\'<div class="embed"><iframe src="https://www.youtube.com/embed/\'+id+\'" allowfullscreen></iframe></div>\';else h+=\'<a class="vid" href="\'+esc(v.url)+\'" target="_blank">▶️ \'+esc(v.label)+\'</a>\';}h+=\'</div>\';}',
         'if((D.photos||[]).length){h+=\'<div class="card"><h2>📸 Les photos</h2><div class="gallery">\';for(var i=D.photos.length-1;i>=0;i--)h+=\'<img src="\'+D.photos[i].src+\'" alt="Photo du voyage de Papa"/>\';h+=\'</div></div>\';}',
         'h+=\'<p class="center" style="color:#8aa0c0;font-size:.75rem">Mis à jour le \'+esc(D.built)+\'</p>\';a.innerHTML=h;}',
+        // eslint-disable-next-line no-useless-escape -- "\/" volontaire : evite la fermeture prematuree du tag script englobant
         '<\/script></body></html>'
       ].join('\n');
       window.initFamily = initFamily;
@@ -4723,7 +4724,7 @@
         const status = document.getElementById('o-status');
         const btn = document.getElementById('o-set');
         const name = (inp && inp.value || '').trim();
-        if (!name){ resetOriginCity(); return; }
+        if (!name){ window.resetOriginCity(); return; }
         status.style.display = ''; status.className = 'nearme-status';
         status.innerHTML = '&#x23F3; Recherche de « ' + name + ' »…';
         const old = btn.textContent; btn.disabled = true; btn.textContent = '⏳…';
@@ -5519,7 +5520,7 @@
         const X = i => padL + (i/(n-1))*(W-padL-padR);
         const Y = v => padT + (1 - (v-minE)/span)*(H-padT-padB);
         // Path line + area
-        let line = '', area = '';
+        let line = '', area;
         for (let i=0;i<n;i++){
           const x=X(i).toFixed(1), y=Y(elev[i]).toFixed(1);
           line += (i===0?'M':'L')+x+' '+y+' ';

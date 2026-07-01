@@ -8,7 +8,6 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 const url = require("url");
-const qs = require("querystring");
 
 const PORT = Number(process.argv[2]) || 3000;
 

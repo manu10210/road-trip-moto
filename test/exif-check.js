@@ -66,7 +66,6 @@ function parseApp1(view, start){
 // ── Constructeur d'un JPEG EXIF minimal avec GPS (+ DateTimeOriginal optionnel) ──
 function buildJpeg({ little, latRef, latDMS, lngRef, lngDMS, when }) {
   // Construit le bloc TIFF, puis l'enveloppe JPEG (FFD8 + APP1 + "Exif\0\0" + TIFF).
-  const chunks = [];
   // On calcule les offsets relatifs au début TIFF.
   // Disposition : header(8) | IFD0 | [Exif IFD?] | GPS IFD | data(lat,lng[,date])
   const hasDate = !!when;
@@ -97,7 +96,7 @@ function buildJpeg({ little, latRef, latDMS, lngRef, lngDMS, when }) {
   let e = ifd0Start + 2;
   // Entrée GPS pointer
   w16(e, 0x8825); w16(e+2, 4); w32(e+4, 1); w32(e+8, gpsIfdStart); e += 12;
-  if (hasDate) { w16(e, 0x8769); w16(e+2, 4); w32(e+4, 1); w32(e+8, exifIfdStart); e += 12; }
+  if (hasDate) { w16(e, 0x8769); w16(e+2, 4); w32(e+4, 1); w32(e+8, exifIfdStart); }
   w32(ifd0Start + 2 + ifd0Count*12, 0); // next IFD = 0
   // Exif IFD (DateTimeOriginal)
   if (hasDate) {
@@ -117,7 +116,7 @@ function buildJpeg({ little, latRef, latDMS, lngRef, lngDMS, when }) {
   // tag3 LngRef
   w16(g, 3); w16(g+2, 2); w32(g+4, 2); buf.write(lngRef, g+8, 'ascii'); g += 12;
   // tag4 Longitude
-  w16(g, 4); w16(g+2, 5); w32(g+4, 3); w32(g+8, lngDataOff); g += 12;
+  w16(g, 4); w16(g+2, 5); w32(g+4, 3); w32(g+8, lngDataOff);
   w32(gpsIfdStart + 2 + gpsCount*12, 0);
   // data rationals
   const writeDMS = (o, dms) => { w32(o, dms[0]); w32(o+4, 1); w32(o+8, dms[1]); w32(o+12, 1); w32(o+16, dms[2]); w32(o+20, 1); };

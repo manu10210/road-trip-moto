@@ -13,11 +13,11 @@ function slice(a, b){ const i = html.indexOf(a); const j = html.indexOf(b, i + 1
 
 // Morceaux de source réels (data + helpers + bloc de fonctions du configurateur)
 const srcCityKey = one(/const _cityKey = [^\n]+;/, '_cityKey');
-const srcHaversine = one(/function haversine\(a, b\)\{[\s\S]*?\n      \}/, 'haversine');
+const srcHaversine = one(/function haversine\(a, b\)\{[\s\S]*?\n {6}\}/, 'haversine');
 const srcFlag = one(/function cfgFlag\(cc\)\{[^\n]+\}/, 'cfgFlag');
 const srcToll = one(/const CFG_TOLL = \{[^\n]+\};/, 'CFG_TOLL');
-const srcEuro = one(/const EURO_DESTS = \[[\s\S]*?\n      \];/, 'EURO_DESTS');
-const srcStops = one(/const CFG_STOPS = \[[\s\S]*?\n      \];/, 'CFG_STOPS');
+const srcEuro = one(/const EURO_DESTS = \[[\s\S]*?\n {6}\];/, 'EURO_DESTS');
+const srcStops = one(/const CFG_STOPS = \[[\s\S]*?\n {6}\];/, 'CFG_STOPS');
 const srcFns = slice('function cfgProject(o, dest, p){', 'function cfgGenerate(surprise){');
 
 const body = `

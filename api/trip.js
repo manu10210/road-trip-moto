@@ -211,7 +211,7 @@ function parseBody(req) {
     try {
       return JSON.parse(req.body);
     } catch (error) {
-      throw new Error("JSON invalide");
+      throw new Error("JSON invalide", { cause: error });
     }
   }
   return {};
