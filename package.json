@@ -2,7 +2,7 @@
   "name": "moto-roadtrip-assistant",
   "version": "1.0.0",
   "description": "Assistant Vercel pour préparer un road trip moto (essence, frontières, hébergements biker-friendly)",
-  "main": "api/trip.js",
+  "private": true,
   "scripts": {
     "test": "node --test"
   },

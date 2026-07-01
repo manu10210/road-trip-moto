@@ -1,8 +1,13 @@
 {
+  "id": "/",
   "name": "Road Trip Moto 🏍️",
   "short_name": "MotoTrip",
   "description": "Assistant road trip moto — essence, frontières, météo, carnet, carte",
+  "lang": "fr",
+  "dir": "ltr",
+  "categories": ["travel", "navigation", "utilities"],
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#09090b",
   "theme_color": "#f59e0b",
@@ -12,5 +17,35 @@
     { "src": "/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "any" },
     { "src": "/icon-512.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" },
     { "src": "/icon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Urgence SOS",
+      "short_name": "SOS",
+      "description": "Numéros d'urgence, phrases de détresse et partage de position GPS",
+      "url": "/#sos",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Carnet de bord",
+      "short_name": "Carnet",
+      "description": "Ajouter une étape ou une photo au journal de voyage",
+      "url": "/#diary",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Plan essence",
+      "short_name": "Essence",
+      "description": "Autonomie, prochain plein, prix du carburant",
+      "url": "/#fuel",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Météo",
+      "short_name": "Météo",
+      "description": "Prévisions météo des prochaines étapes",
+      "url": "/#weather",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
   ]
 }

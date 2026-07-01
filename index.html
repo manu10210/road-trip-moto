@@ -2092,12 +2092,23 @@
       // Hauteur d'en-tête → variable CSS (sous-nav collante sous le header)
       function setHeaderH() { const h = document.querySelector('header'); if (h) document.documentElement.style.setProperty('--header-h', h.offsetHeight + 'px'); }
       setHeaderH(); window.addEventListener('resize', setHeaderH);
-      window.addEventListener('hashchange', () => { const h = (location.hash || '').replace('#', ''); if (TAB_META[h] && h !== currentTab) showTab(h, { keepScroll: true }); });
+      window.addEventListener('hashchange', () => {
+        const h = (location.hash || '').replace('#', '');
+        if (h === 'sos') { openSOS(); history.replaceState(null, '', location.pathname + location.search); return; }
+        if (TAB_META[h] && h !== currentTab) showTab(h, { keepScroll: true });
+      });
 
       // Restauration : hash > dernier onglet mémorisé > défaut.
       // Appelée APRÈS le chargement du plan (voir bloc Init) pour que les inits aient l'état prêt.
       function restoreTab() {
         const h = (location.hash || '').replace('#', '');
+        if (h === 'sos') {
+          history.replaceState(null, '', location.pathname + location.search);
+          let saved = ''; try { saved = localStorage.getItem('roadtrip_tab') || ''; } catch(e) {}
+          showTab(TAB_META[saved] ? saved : 'prepare', { keepScroll: true });
+          setTimeout(openSOS, 60);
+          return;
+        }
         let saved = ''; try { saved = localStorage.getItem('roadtrip_tab') || ''; } catch(e) {}
         showTab(TAB_META[h] ? h : (TAB_META[saved] ? saved : 'prepare'), { keepScroll: true });
       }
