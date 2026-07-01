@@ -1,5 +1,7 @@
 # 🏍️ Assistant Road Trip Moto (Vercel)
 
+[](https://github.com/manu10210/road-trip-moto/actions/workflows/test.yml)
+
 Application web + API serverless **Vercel** pour préparer et vivre ton road trip moto :
 
 | Fonctionnalité | Détail |
