@@ -931,6 +931,9 @@
     <div class="tab-content active" data-tab="prepare">
       <div class="wrap">
 
+        <!-- Tableau de bord du jour (visible uniquement pendant le voyage) -->
+        <div class="card" id="today-card" style="display:none"></div>
+
         <!-- ÉTAPES 1 & 2 — l'essentiel, côte à côte -->
         <div class="prep-setup">
           <div class="card prep-step">
@@ -6248,6 +6251,7 @@
       }
       function renderJourney(){
         refreshReturnUI();
+        try { renderTodayCard(); } catch(e){}
         const box = document.getElementById('cd-journey');
         if (!box) return;
         const r = chosenReturnRoute();
@@ -6315,6 +6319,132 @@
         else if (kmPerDay > maxKm){ level = 'warn'; msg = 'soutenu'; }
         return { manual, ret, totalDays, outboundDays, ridingDays, spareDays, stay, returnDays, totalKm, numLegs, maxKm, kmPerDay, minDays, level, msg };
       }
+
+      // ── Tableau de bord « Aujourd'hui » ────────────────────────────
+      // Pendant le voyage (entre la date de départ et la date de retour), calcule
+      // où tu es censé être aujourd'hui (jour de route / séjour / retour), en
+      // réutilisant EXACTEMENT le même découpage jour-par-jour que la carte
+      // (ROUTE_WP[i]._dayNum, posé par recomputeRouteDays via computeTripPlan/
+      // applyTripPlan). Ajoute une alerte frontière et une alerte plein si
+      // l'étape du jour dépasse l'autonomie réservoir, + la météo du soir.
+      let _todayWxCache = {}, _todayWxLastKey = null;
+      function _todayIsAfter(a, b){
+        const a0 = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+        const b0 = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+        return a0 > b0;
+      }
+      function computeTodayInfo(){
+        if (!_cdDate || !_cdDate.value) return null;
+        const dep = new Date(`${_cdDate.value}T${_cdTime.value || '08:00'}`);
+        const now = new Date();
+        if (now < dep) return null; // pas encore parti
+        const ret = getReturnDate();
+        if (ret && _todayIsAfter(now, ret)) return null; // voyage terminé
+
+        const dep0 = new Date(dep.getFullYear(), dep.getMonth(), dep.getDate());
+        const now0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const dayNum = Math.round((now0 - dep0) / 86400000) + 1;
+
+        let tp = null; try { tp = computeTripPlan(); } catch(e){}
+        const ridingDays = Math.max(1, (tp && tp.ridingDays) || (ROUTE_WP.length - 1));
+        const stay = Math.max(0, (tp && tp.stay) || 0);
+        const returnDays = Math.max(0, (tp && tp.returnDays) || 0);
+        const maxKm = (tp && tp.maxKm) || 260;
+
+        if (dayNum <= ridingDays){
+          const firstIdx = ROUTE_WP.findIndex(w => (w._dayNum || 1) === dayNum);
+          const idx0 = firstIdx >= 0 ? firstIdx : ROUTE_WP.length - 1;
+          const wpsToday = ROUTE_WP.filter(w => (w._dayNum || 1) === dayNum);
+          const target = wpsToday.length ? wpsToday[wpsToday.length - 1] : ROUTE_WP[ROUTE_WP.length - 1];
+          const from = idx0 > 0 ? ROUTE_WP[idx0 - 1] : ROUTE_WP[0];
+          const kmToday = wpsToday.reduce((s,w) => s + (w.km || 0), 0);
+          let kmDoneBefore = 0;
+          for (let i = 1; i < idx0; i++) kmDoneBefore += (ROUTE_WP[i].km || 0);
+          const totalKm = (tp && tp.totalKm) || ROUTE_WP.slice(1).reduce((s,w) => s + (w.km || 0), 0);
+          const chain = [from].concat(wpsToday.length ? wpsToday : [target]);
+          const borders = [];
+          for (let i = 1; i < chain.length; i++){
+            if (chain[i].flag !== chain[i-1].flag) borders.push({ from: chain[i-1], to: chain[i] });
+          }
+          const fuelRangeKm = (typeof plan !== 'undefined' && plan && plan.fuelPlan && plan.fuelPlan.fullTankRangeKm) || null;
+          return {
+            phase:'outbound', dayNum, ridingDays, from, target, kmToday,
+            kmDoneAfter: kmDoneBefore + kmToday, totalKm, maxKm, borders,
+            fuelRangeKm, fuelWarn: !!(fuelRangeKm && kmToday > fuelRangeKm)
+          };
+        }
+        if (dayNum <= ridingDays + stay){
+          return { phase:'stay', dayNum: dayNum - ridingDays, stay, target: ROUTE_WP[ROUTE_WP.length - 1] };
+        }
+        return { phase:'return', dayNum: dayNum - ridingDays - stay, returnDays, target: ROUTE_WP[0] };
+      }
+      async function fetchTodayWx(lat, lng){
+        const key = lat.toFixed(2) + ',' + lng.toFixed(2);
+        const c = _todayWxCache[key];
+        if (c && (Date.now() - c.ts) < 20*60*1000) return c.data;
+        try {
+          const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,windspeed_10m_max,weathercode&timezone=auto&forecast_days=1`);
+          const d = await r.json();
+          const data = (d && d.daily && d.daily.time && d.daily.time.length) ? {
+            tmax: Math.round(d.daily.temperature_2m_max[0]),
+            tmin: Math.round(d.daily.temperature_2m_min[0]),
+            rain: d.daily.precipitation_probability_max[0],
+            wind: Math.round(d.daily.windspeed_10m_max[0]),
+            code: d.daily.weathercode[0]
+          } : null;
+          _todayWxCache[key] = { ts: Date.now(), data };
+          return data;
+        } catch(e){ return null; }
+      }
+      function renderTodayCard(){
+        const box = document.getElementById('today-card');
+        if (!box) return;
+        let info = null;
+        try { info = computeTodayInfo(); } catch(e){}
+        if (!info){ box.style.display = 'none'; box.innerHTML = ''; return; }
+        box.style.display = '';
+        let html = '';
+        if (info.phase === 'outbound'){
+          const pct = info.totalKm > 0 ? Math.min(100, Math.round(info.kmDoneAfter / info.totalKm * 100)) : 0;
+          const remain = Math.max(0, info.totalKm - info.kmDoneAfter);
+          html += `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+              <h2 style="margin:0">🎯 Aujourd'hui — Jour ${info.dayNum}${info.ridingDays > 1 ? ' / ' + info.ridingDays : ''}</h2>
+              <span class="badge">${info.from.flag} ${info.from.name} → ${info.target.flag} ${info.target.name}</span>
+            </div>
+            <div class="trip-progress-track" style="margin-top:10px"><div class="trip-progress-fill" style="width:${pct}%"></div></div>
+            <div style="font-size:.78rem;color:var(--muted);margin-top:4px">${info.kmDoneAfter.toLocaleString('fr-FR')} / ${info.totalKm.toLocaleString('fr-FR')} km parcourus (estimation) · ${pct}%</div>
+            <div class="g3" style="margin-top:12px">${
+              stat('~' + info.kmToday.toLocaleString('fr-FR') + ' km', "Étape d'aujourd'hui") +
+              stat(remain.toLocaleString('fr-FR') + ' km', 'Restant après ce soir') +
+              stat(info.maxKm + ' km/j', 'Ton confort')
+            }</div>`;
+          info.borders.forEach(b => {
+            html += `<div class="alert" style="margin-top:10px">🛂 <strong>Frontière aujourd'hui :</strong> ${b.from.flag} ${b.from.name} → ${b.to.flag} ${b.to.name}. Prépare tes papiers (onglet 🛂 Frontières).</div>`;
+          });
+          if (info.fuelWarn){
+            html += `<div class="alert" style="margin-top:10px">⛽ <strong>Plein conseillé :</strong> l'étape du jour (~${info.kmToday.toLocaleString('fr-FR')} km) dépasse ton autonomie pleine (~${info.fuelRangeKm} km). Prévois au moins un arrêt essence.</div>`;
+          }
+        } else if (info.phase === 'stay'){
+          html += `<h2 style="margin:0">🏖️ Séjour sur place — Jour ${info.dayNum}${info.stay > 1 ? ' / ' + info.stay : ''}</h2>
+            <p class="hint" style="margin-top:6px">Profite de <strong>${info.target.name}</strong> ${info.target.flag} avant de reprendre la route pour le retour.</p>`;
+        } else if (info.phase === 'return'){
+          html += `<h2 style="margin:0">🔄 Retour — Jour ${info.dayNum}${info.returnDays > 1 ? ' / ' + info.returnDays : ''}</h2>
+            <p class="hint" style="margin-top:6px">Cap sur <strong>${info.target.name}</strong> ${info.target.flag} pour rentrer à la maison. Bonne route !</p>`;
+        }
+        html += `<div id="today-wx" style="margin-top:12px;font-size:.85rem;color:var(--muted)">🌤️ Météo du jour à ${info.target.name}…</div>`;
+        box.innerHTML = html;
+
+        const wxKey = info.target.lat + ',' + info.target.lng;
+        _todayWxLastKey = wxKey;
+        fetchTodayWx(info.target.lat, info.target.lng).then(w => {
+          if (_todayWxLastKey !== wxKey) return; // la cible a changé entretemps
+          const wx = document.getElementById('today-wx');
+          if (!wx) return;
+          if (!w){ wx.textContent = ''; return; }
+          wx.innerHTML = `${WX_EMOJI(w.code)} <strong>${info.target.name}</strong> aujourd'hui : ${w.tmax}° / ${w.tmin}° · 💧 ${w.rain}% · 💨 ${w.wind} km/h — ${WX_LABEL(w.code)}`;
+        }).catch(() => {});
+      }
+
       function updateRouteSubtitles(plan){
         const km = (plan.totalKm || 0).toLocaleString('fr-FR');
         const dd = plan.ridingDays;
