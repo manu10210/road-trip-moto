@@ -906,6 +906,20 @@
       .poi-actions { display:flex; gap:8px; flex-wrap:wrap; }
       .poi-marker { width:26px; height:26px; display:flex; align-items:center; justify-content:center; font-size:.92rem; background:linear-gradient(135deg,#fbbf24,#f97316); border-radius:50% 50% 50% 0; transform:rotate(-45deg); border:2px solid rgba(255,255,255,0.92); box-shadow:0 2px 11px rgba(249,115,22,0.6); }
       .poi-marker span { transform:rotate(45deg); }
+      /* ── Carte interactive des visites (Leaflet) ────────── */
+      .poi-map-card { padding:0; overflow:hidden; }
+      .poi-map-hd { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:15px 16px 11px; flex-wrap:wrap; }
+      .poi-map-hd h2 { margin:0; }
+      .poi-map-count { font-size:.76rem; color:var(--muted); font-weight:600; background:var(--bg); border:1px solid var(--border); border-radius:20px; padding:4px 11px; white-space:nowrap; }
+      .poi-map { height:340px; width:100%; background:var(--bg2); }
+      .poi-map-tip { font-size:.74rem; color:var(--muted); padding:9px 16px 13px; display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+      .poi-mpin { width:14px; height:14px; border-radius:50%; background:rgba(148,163,184,0.85); border:2px solid rgba(255,255,255,0.55); box-shadow:0 1px 4px rgba(0,0,0,.5); cursor:pointer; transition:transform .15s; }
+      .poi-mpin:hover { transform:scale(1.35); background:#cbd5e1; }
+      .poi-mpin.on { width:32px; height:32px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); background:linear-gradient(135deg,#34d399,#22c55e); border:2px solid #fff; box-shadow:0 3px 10px rgba(34,197,94,0.55); display:flex; align-items:center; justify-content:center; }
+      .poi-mpin.on span { transform:rotate(45deg); font-size:.98rem; line-height:1; }
+      .poi-mpin.on:hover { transform:rotate(-45deg) scale(1.12); }
+      .poi-city { width:24px; height:24px; display:flex; align-items:center; justify-content:center; font-size:.72rem; font-weight:800; color:#1a0e02; background:linear-gradient(135deg,#fbbf24,#f59e0b); border-radius:50%; border:2px solid rgba(255,255,255,0.9); box-shadow:0 2px 7px rgba(0,0,0,.5); }
+      .poi-city.end { background:linear-gradient(135deg,#5eead4,#22c55e); color:#04201c; }
       /* ── Itinéraire Plans jour par jour ─────────────────── */
       .day-routes { display: grid; gap: 10px; }
       .day-route { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
@@ -1765,6 +1779,14 @@
             <a class="btn btn-secondary" id="poi-apple" target="_blank" style="padding:8px 14px;font-size:0.82rem;text-decoration:none;display:inline-block">&#x1F34E; Plans</a>
             <button class="btn btn-secondary" onclick="clearPoi()" style="padding:8px 14px;font-size:0.82rem">🗑️ Tout retirer</button>
           </div>
+        </div>
+        <div class="card poi-map-card">
+          <div class="poi-map-hd">
+            <h2>🗺️ Ta carte des visites</h2>
+            <span class="poi-map-count" id="poi-map-count">—</span>
+          </div>
+          <div id="poi-map" class="poi-map"></div>
+          <div class="poi-map-tip">🟢 vert = dans ton trajet · ⚪ gris = à ajouter · <strong>touche un point</strong> pour l'ajouter ou le retirer, tout se met à jour en direct.</div>
         </div>
         <div id="poi-list"></div>
       </div>
@@ -6303,6 +6325,7 @@
         }).join('');
         renderPoiStats();
         renderGuided();
+        try { renderPoiMap(); } catch(e){}
       }
       function poiCard(p, on){
         const badges = [];
@@ -6353,6 +6376,63 @@
       function poiAppleUrl(chosen){
         return appleCoordsRouteUrl(poiOrderedPts(chosen));
       }
+
+      // ── Carte interactive des visites (Leaflet) ───────────────────
+      // Route + tous les lieux filtrés ; vert = choisi, gris = à ajouter.
+      // Un tap sur un point l'ajoute/retire, tout se synchronise en direct.
+      let _poiMap = null, _poiMapLayer = null, _poiMapFitted = false;
+      function poiMapPin(p, on){
+        return on
+          ? L.divIcon({ html:'<div class="poi-mpin on"><span>'+(p.emoji||'📍')+'</span></div>', className:'', iconSize:[32,32], iconAnchor:[16,32], popupAnchor:[0,-30] })
+          : L.divIcon({ html:'<div class="poi-mpin"></div>', className:'', iconSize:[14,14], iconAnchor:[7,7], popupAnchor:[0,-8] });
+      }
+      function renderPoiMap(){
+        const host = document.getElementById('poi-map');
+        if (!host || typeof L === 'undefined') return;
+        if (!_poiMap && host.offsetParent === null) return; // onglet caché : on crée à l'ouverture
+        const sel = getPoiSel();
+        const base = VISIT_POI.filter(p => poiFilter === 'all' || p.type === poiFilter || p.type === 'mixte');
+        const items = base.filter(p => poiCountry === 'all' || p.c === poiCountry);
+
+        if (!_poiMap){
+          _poiMap = L.map('poi-map', { zoomControl:true, attributionControl:false, scrollWheelZoom:false });
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom:18 }).addTo(_poiMap);
+          const line = ROUTE_WP.map(w => [w.lat, w.lng]);
+          L.polyline(line, { color:'#f59e0b', weight:8, opacity:.12 }).addTo(_poiMap);
+          L.polyline(line, { color:'#f59e0b', weight:3, opacity:.85 }).addTo(_poiMap);
+          ROUTE_WP.forEach((w, i) => {
+            const isStart = i === 0, isEnd = i === ROUTE_WP.length - 1;
+            const icon = L.divIcon({ html:'<div class="poi-city'+(isEnd?' end':'')+'">'+(isStart?'🏁':isEnd?'🎯':(i+1))+'</div>', className:'', iconSize:[24,24], iconAnchor:[12,12], popupAnchor:[0,-14] });
+            L.marker([w.lat, w.lng], { icon }).addTo(_poiMap)
+              .bindPopup('<b>'+w.flag+' '+famEsc(w.name)+'</b><br><span style="color:#8fa5bc;font-size:.8rem">'+famEsc(w.day)+'</span>');
+          });
+          _poiMapLayer = L.layerGroup().addTo(_poiMap);
+          _poiMap.setView([54, 15], 4);
+        }
+
+        _poiMapLayer.clearLayers();
+        items.forEach(p => {
+          const on = sel.includes(p.id);
+          const btn = on
+            ? '<button class="btn btn-secondary" onclick="togglePoi(\''+p.id+'\')" style="margin-top:8px;padding:5px 10px;font-size:.76rem;width:100%">✓ Retirer du trajet</button>'
+            : '<button class="btn btn-primary" onclick="togglePoi(\''+p.id+'\')" style="margin-top:8px;padding:5px 10px;font-size:.76rem;width:100%">➕ Ajouter au trajet</button>';
+          L.marker([p.lat, p.lng], { icon: poiMapPin(p, on), zIndexOffset: on ? 1000 : 0 }).addTo(_poiMapLayer)
+            .bindPopup('<b>'+(p.emoji||'')+' '+famEsc(p.name)+'</b>'
+              + '<br><span style="color:#8fa5bc;font-size:.78rem">'+p.flag+' '+famEsc(p.c)
+              + (p.detour ? ' · ↪️ +'+p.detour+' km' : ' · ✅ sur la route')
+              + (p.unesco ? ' · ★ UNESCO' : '')+'</span>'
+              + btn);
+        });
+
+        const badge = document.getElementById('poi-map-count');
+        if (badge){ const n = sel.length; badge.textContent = n ? ('📍 '+n+' visite'+(n>1?'s':'')+' choisie'+(n>1?'s':'')) : 'Touche un point pour l\'ajouter'; }
+        if (!_poiMapFitted){
+          _poiMapFitted = true;
+          try { _poiMap.fitBounds(ROUTE_WP.map(w => [w.lat, w.lng]), { padding:[28,28], maxZoom:7 }); } catch(_){}
+        }
+        setTimeout(() => { try { _poiMap.invalidateSize(); } catch(_){} }, 160);
+      }
+
       window.togglePoi = id => {
         const sel = getPoiSel(); const i = sel.indexOf(id);
         if (i >= 0) sel.splice(i,1); else sel.push(id);
@@ -6362,6 +6442,7 @@
         renderPoiStats();
         if (poiMood) renderGuided();
         if (_nmWatch !== null) renderNearMe();
+        try { renderPoiMap(); } catch(e){}
         if (window._refreshPoi) window._refreshPoi();
         try { renderDayRoutes(); } catch(e){}
       };
