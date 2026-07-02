@@ -920,6 +920,46 @@
       .poi-mpin.on:hover { transform:rotate(-45deg) scale(1.12); }
       .poi-city { width:24px; height:24px; display:flex; align-items:center; justify-content:center; font-size:.72rem; font-weight:800; color:#1a0e02; background:linear-gradient(135deg,#fbbf24,#f59e0b); border-radius:50%; border:2px solid rgba(255,255,255,0.9); box-shadow:0 2px 7px rgba(0,0,0,.5); }
       .poi-city.end { background:linear-gradient(135deg,#5eead4,#22c55e); color:#04201c; }
+      /* ── Découverte dynamique (Overpass / OpenStreetMap) ─ */
+      .disco-card { background:linear-gradient(125deg, rgba(99,102,241,0.16), rgba(56,189,248,0.09) 55%, rgba(14,165,233,0.08)); border:1px solid rgba(99,102,241,0.34); position:relative; overflow:hidden; }
+      .disco-card::before { content:''; position:absolute; right:-45px; top:-45px; width:190px; height:190px; border-radius:50%; background:radial-gradient(circle, rgba(99,102,241,0.22), transparent 70%); pointer-events:none; }
+      .disco-hd { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+      .disco-hd h2 { margin:0; }
+      .disco-src { font-size:.68rem; font-weight:700; color:#a5b4fc; background:rgba(99,102,241,0.14); border:1px solid rgba(99,102,241,0.3); border-radius:20px; padding:3px 10px; white-space:nowrap; }
+      .disco-modes { display:flex; gap:7px; flex-wrap:wrap; margin:12px 0 10px; }
+      .disco-mode { flex:1 1 auto; min-width:120px; background:var(--bg); border:1px solid var(--border); color:var(--muted); padding:9px 12px; border-radius:12px; cursor:pointer; font-size:.82rem; font-weight:600; font-family:inherit; transition:all .15s; }
+      .disco-mode:hover { color:var(--text); border-color:rgba(99,102,241,0.5); }
+      .disco-mode.on { background:linear-gradient(135deg, rgba(99,102,241,0.28), rgba(56,189,248,0.16)); border-color:rgba(129,140,248,0.7); color:#e0e7ff; }
+      .disco-area { margin:2px 0 10px; }
+      .disco-area input { width:100%; }
+      .disco-cats { display:flex; flex-wrap:wrap; gap:7px; margin:2px 0 12px; }
+      .disco-cat { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:20px; border:1px solid var(--border); background:var(--bg); color:var(--muted); font-size:.79rem; font-weight:600; cursor:pointer; font-family:inherit; transition:all .15s; user-select:none; }
+      .disco-cat:hover { border-color:rgba(56,189,248,0.55); color:var(--text); }
+      .disco-cat.on { background:linear-gradient(135deg, rgba(56,189,248,0.2), rgba(99,102,241,0.14)); border-color:rgba(56,189,248,0.6); color:#bae6fd; }
+      .disco-actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+      .disco-prep { font-size:.76rem; color:var(--muted); line-height:1.5; }
+      .disco-prep b { color:#a5b4fc; font-variant-numeric:tabular-nums; }
+      .disco-status { margin-top:13px; font-size:.84rem; border-radius:11px; padding:12px 14px; display:flex; align-items:center; gap:10px; }
+      .disco-status.load { background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.28); color:#c7d2fe; }
+      .disco-status.err { background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.28); color:#fca5a5; }
+      .disco-status.ok { background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.28); color:#86efac; }
+      .disco-spin { width:17px; height:17px; border-radius:50%; border:2.5px solid rgba(129,140,248,0.3); border-top-color:#818cf8; animation:discoSpin .7s linear infinite; flex-shrink:0; }
+      @keyframes discoSpin { to { transform:rotate(360deg); } }
+      .disco-results { display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+      .disco-item { display:flex; gap:12px; align-items:flex-start; background:var(--bg); border:1px solid var(--border); border-radius:13px; padding:12px 13px; transition:border-color .2s; }
+      .disco-item.sel { border-color:rgba(34,197,94,0.55); box-shadow:0 0 0 1px rgba(34,197,94,0.2); }
+      .disco-rank { width:30px; height:30px; flex-shrink:0; border-radius:9px; background:linear-gradient(135deg,rgba(99,102,241,0.25),rgba(56,189,248,0.18)); display:flex; align-items:center; justify-content:center; font-size:1.15rem; }
+      .disco-main { flex:1; min-width:0; }
+      .disco-name { font-size:.94rem; font-weight:700; color:var(--text); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+      .disco-meta { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+      .disco-tag { font-size:.68rem; font-weight:700; padding:2px 9px; border-radius:20px; letter-spacing:.02em; }
+      .disco-tag.route { background:rgba(34,197,94,0.16); color:#86efac; }
+      .disco-tag.det { background:rgba(249,115,22,0.14); color:#fdba74; }
+      .disco-tag.uns { background:rgba(245,158,11,0.14); color:var(--accent); }
+      .disco-tag.wiki { background:rgba(56,189,248,0.14); color:#7dd3fc; }
+      .disco-tag.star { background:rgba(167,139,250,0.16); color:#d8b4fe; }
+      .disco-act { display:flex; flex-direction:column; gap:6px; flex-shrink:0; }
+      .disco-act .btn { padding:6px 11px; font-size:.75rem; text-decoration:none; white-space:nowrap; }
       /* ── Itinéraire Plans jour par jour ─────────────────── */
       .day-routes { display: grid; gap: 10px; }
       .day-route { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
@@ -1759,6 +1799,29 @@
           </div>
           <div id="nearme-status" class="nearme-status" style="display:none"></div>
           <div id="nearme-list"></div>
+        </div>
+        <div class="card disco-card">
+          <div class="disco-hd">
+            <h2>🛰️ Découverte dynamique</h2>
+            <span class="disco-src">Vrais lieux · OpenStreetMap</span>
+          </div>
+          <p style="font-size:0.84rem;color:var(--muted);margin:6px 0 2px">Je trouve de <strong>vrais lieux</strong> (châteaux, panoramas, nature, musées…) partout en Europe et je les classe selon tes <strong>paramètres de préparation</strong> — km/jour → budget de détour. <span style="color:#a5b4fc">Connexion requise ; hors-ligne, ta sélection « coups de cœur » reste dispo.</span></p>
+          <div class="disco-modes" id="disco-modes">
+            <button type="button" class="disco-mode on" data-m="route">🧭 Le long de ma route</button>
+            <button type="button" class="disco-mode" data-m="around">📍 Autour de moi</button>
+            <button type="button" class="disco-mode" data-m="area">🌍 Explorer une zone</button>
+          </div>
+          <div class="disco-area" id="disco-area" style="display:none">
+            <label>🔍 Ville ou lieu à explorer</label>
+            <input id="disco-area-q" placeholder="ex : Prague, Dolomites, Lac de Côme…"/>
+          </div>
+          <div class="disco-cats" id="disco-cats"></div>
+          <div class="disco-actions">
+            <button class="btn btn-primary" id="disco-go">🔎 Trouver des lieux</button>
+            <span class="disco-prep" id="disco-prep"></span>
+          </div>
+          <div class="disco-status" id="disco-status" style="display:none"></div>
+          <div id="disco-results" class="disco-results"></div>
         </div>
         <div class="card">
           <h2>🧭 Ton itinéraire selon ton état</h2>
@@ -6306,6 +6369,7 @@
           const byCountry = document.getElementById('poi-country');
           if (byCountry) byCountry.addEventListener('change', () => { poiCountry = byCountry.value || 'all'; renderPoi(); });
           renderMoodPicker();
+          initDisco();
           _poiInit = true;
         }
         renderPoi();
@@ -6326,6 +6390,7 @@
         renderPoiStats();
         renderGuided();
         try { renderPoiMap(); } catch(e){}
+        try { updateDiscoPrep(); } catch(e){}
       }
       function poiCard(p, on){
         const badges = [];
@@ -6349,7 +6414,7 @@
       }
       function renderPoiStats(){
         const sel = getPoiSel();
-        const chosen = VISIT_POI.filter(p => sel.includes(p.id));
+        const chosen = selectedPois();
         const km = chosen.reduce((s,p) => s + (p.detour||0), 0);
         const hours = km/65 + chosen.length*0.75; // détours roulés + ~45 min de visite par lieu
         document.getElementById('poi-stats').innerHTML =
@@ -6375,6 +6440,267 @@
       }
       function poiAppleUrl(chosen){
         return appleCoordsRouteUrl(poiOrderedPts(chosen));
+      }
+
+      // ══ Découverte dynamique de lieux · OpenStreetMap / Overpass ══════════
+      // Trouve de VRAIS lieux (châteaux, panoramas, nature, musées…) partout en
+      // Europe : autour du GPS, le long de la route, ou dans une zone choisie.
+      // Chaque lieu est scoré selon les paramètres de préparation (km/jour →
+      // budget de détour). Gratuit, sans clé. Repli hors-ligne : la sélection
+      // curatée VISIT_POI reste toujours dispo.
+      const OVERPASS_EPS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
+      const DISCO_CATS = [
+        { id:'castle',   emoji:'🏰', label:'Châteaux & forts',   sel:['["historic"~"castle|fort|manor|palace|city_gate"]'] },
+        { id:'heritage', emoji:'🏛️', label:'Monuments & ruines', sel:['["historic"~"monument|memorial|ruins|archaeological_site"]'] },
+        { id:'view',     emoji:'🌄', label:'Panoramas',          sel:['["tourism"="viewpoint"]'] },
+        { id:'nature',   emoji:'🏞️', label:'Nature',             sel:['["natural"~"peak|waterfall"]','["waterway"="waterfall"]','["leisure"="nature_reserve"]'] },
+        { id:'museum',   emoji:'🖼️', label:'Musées',             sel:['["tourism"="museum"]'] },
+        { id:'sight',    emoji:'✨', label:'Incontournables',    sel:['["tourism"="attraction"]'] }
+      ];
+      let _discoMode = 'route', _discoCats = ['castle','heritage','view','nature','sight'], _discoResults = [], _discoBusy = false;
+
+      // ── Registre + persistance des lieux dynamiques ───────────────
+      // Un lieu ajouté (hors VISIT_POI) est stocké entier pour survivre au
+      // rechargement et s'afficher partout (carte, stats, itinéraire).
+      const _DYN = {};
+      function registerDyn(list){ (list||[]).forEach(p => { _DYN[p.id] = p; }); }
+      function getDynStore(){ try { return JSON.parse(localStorage.getItem('roadtrip_poi_dyn')||'{}') || {}; } catch(e){ return {}; } }
+      function setDynStore(o){ try { localStorage.setItem('roadtrip_poi_dyn', JSON.stringify(o)); } catch(e){} }
+      function poiById(id){ return VISIT_POI.find(x => x.id === id) || _DYN[id] || getDynStore()[id] || null; }
+      function selectedPois(){ return getPoiSel().map(poiById).filter(Boolean); }
+
+      // ── Paramètres de préparation → budget de détour ──────────────
+      function discoPrep(){
+        const dist  = Math.round(+(document.getElementById('f-dist')||{}).value || (ROUTE_WP[ROUTE_WP.length-1]||{}).km || 2000);
+        const daily = Math.max(50, Math.round(+(document.getElementById('f-daily')||{}).value || 260));
+        const days  = Math.max(1, Math.ceil(dist / daily));
+        // Allure douce (peu de km/j) → on tolère de plus gros détours, et inversement.
+        const detourMax = Math.max(20, Math.round((330 - Math.min(320, daily)) * 0.65));
+        return { dist, daily, days, detourMax };
+      }
+      function updateDiscoPrep(){
+        const el = document.getElementById('disco-prep'); if (!el) return;
+        const pr = discoPrep();
+        el.innerHTML = '📐 <b>' + pr.days + ' j</b> · <b>' + pr.daily + ' km/j</b> → détour toléré ≈ <b>' + pr.detourMax + ' km</b>';
+      }
+
+      // ── Distance d'un point à la polyline de la route (km, approx) ─
+      function _projKm(o, p){
+        const R = 6371, toR = x => x*Math.PI/180;
+        return { x:(toR(p.lng-o.lng))*Math.cos(toR((o.lat+p.lat)/2))*R, y:(toR(p.lat-o.lat))*R };
+      }
+      function distPointToRouteKm(pt){
+        const wp = ROUTE_WP; let best = Infinity;
+        for (let i=0; i<wp.length-1; i++){
+          const P = _projKm(wp[i], pt), B = _projKm(wp[i], wp[i+1]);
+          const len2 = B.x*B.x + B.y*B.y || 1e-9;
+          let t = (P.x*B.x + P.y*B.y)/len2; t = Math.max(0, Math.min(1, t));
+          const dx = P.x - B.x*t, dy = P.y - B.y*t;
+          const d = Math.sqrt(dx*dx + dy*dy);
+          if (d < best) best = d;
+        }
+        return best;
+      }
+
+      // ── Client Overpass : timeout + bascule sur miroir ────────────
+      async function overpassFetch(query){
+        let lastErr;
+        for (const ep of OVERPASS_EPS){
+          const ctrl = new AbortController();
+          const to = setTimeout(() => ctrl.abort(), 22000);
+          try {
+            const r = await fetch(ep, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'data=' + encodeURIComponent(query), signal:ctrl.signal });
+            clearTimeout(to);
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            const d = await r.json();
+            return d.elements || [];
+          } catch(e){ clearTimeout(to); lastErr = e; }
+        }
+        throw lastErr || new Error('Overpass indisponible');
+      }
+      function discoQuery(catIds, aroundClause, perCat){
+        let body = '';
+        DISCO_CATS.filter(c => catIds.includes(c.id)).forEach(c =>
+          c.sel.forEach(s => { body += 'nwr' + s + '["name"]' + aroundClause + ';'; }));
+        return '[out:json][timeout:25];(' + body + ');out center ' + (perCat||70) + ';';
+      }
+
+      // ── Normalisation OSM → même forme que VISIT_POI ──────────────
+      function discoKind(t){
+        const h = t.historic||'', to = t.tourism||'', n = t.natural||'', w = t.waterway||'', l = t.leisure||'';
+        if (/castle|fort|manor|palace|city_gate/.test(h)) return { e:'🏰', type:'batiment', w:3,   lbl:'Château / fort' };
+        if (/monument|memorial/.test(h))                  return { e:'🗿', type:'batiment', w:2.3, lbl:'Monument' };
+        if (/ruins|archaeolog/.test(h))                   return { e:'🏛️', type:'batiment', w:2.4, lbl:'Site historique' };
+        if (to === 'viewpoint')                           return { e:'🌄', type:'paysage',  w:2.6, lbl:'Point de vue' };
+        if (to === 'museum')                              return { e:'🖼️', type:'batiment', w:1.6, lbl:'Musée' };
+        if (n === 'peak')                                 return { e:'⛰️', type:'paysage',  w:2.2, lbl:'Sommet' };
+        if (n === 'waterfall' || w === 'waterfall')       return { e:'💧', type:'paysage',  w:2.6, lbl:'Cascade' };
+        if (l === 'nature_reserve')                       return { e:'🌳', type:'paysage',  w:2.3, lbl:'Réserve naturelle' };
+        if (h)                                            return { e:'🏛️', type:'batiment', w:2,   lbl:'Patrimoine' };
+        return { e:'✨', type:'mixte', w:1.8, lbl:'À voir' };
+      }
+      function normalizeDisco(els){
+        const seen = new Set(), out = [];
+        for (const el of (els||[])){
+          const t = el.tags || {}, name = t.name;
+          if (!name || name.length > 60) continue;
+          const lat = el.lat != null ? el.lat : (el.center && el.center.lat);
+          const lng = el.lon != null ? el.lon : (el.center && el.center.lon);
+          if (lat == null || lng == null) continue;
+          const key = name.toLowerCase() + '@' + lat.toFixed(2) + '_' + lng.toFixed(2);
+          if (seen.has(key)) continue; seen.add(key);
+          const k = discoKind(t);
+          const unesco = !!(t['heritage'] || t['whc:inscription_date'] || /unesco|world heritage/i.test((t['heritage:operator']||'') + (t['operator']||'')));
+          out.push({ id:'osm' + el.type[0] + el.id, dyn:true, name, lat, lng, emoji:k.e, type:k.type,
+            kindLbl:k.lbl, _w:k.w, unesco, wiki:!!(t.wikipedia || t.wikidata), flag:'📍',
+            c:t['addr:city'] || '', desc:k.lbl + (t.wikipedia ? ' · référencé sur Wikipédia' : '') });
+        }
+        return out;
+      }
+      function scoreDisco(p, pr, center){
+        let s = p._w || 1.8;
+        if (p.wiki) s += 1;
+        if (p.unesco) s += 2;
+        if (_discoMode === 'around' && center) s -= haversine(center, { lat:p.lat, lng:p.lng })/1000/40;
+        else s -= (p.detour / Math.max(10, pr.detourMax)) * 2.2;
+        return s;
+      }
+
+      // ── Modes de recherche ────────────────────────────────────────
+      function discoRoutePts(){
+        const wp = ROUTE_WP, pts = [];
+        for (let i=0; i<wp.length; i++){
+          pts.push({ lat:wp[i].lat, lng:wp[i].lng });
+          if (i < wp.length-1) pts.push({ lat:(wp[i].lat+wp[i+1].lat)/2, lng:(wp[i].lng+wp[i+1].lng)/2 });
+        }
+        return pts;
+      }
+      function discoGetPos(){
+        if (_nmPos && _nmPos.coords) return Promise.resolve({ lat:_nmPos.coords.latitude, lng:_nmPos.coords.longitude });
+        return new Promise((res, rej) => {
+          if (!('geolocation' in navigator)){ rej(new Error('GPS non disponible sur cet appareil.')); return; }
+          discoStatus('load', 'Localisation GPS…');
+          navigator.geolocation.getCurrentPosition(
+            p => res({ lat:p.coords.latitude, lng:p.coords.longitude }),
+            err => rej(new Error(err && err.code === 1 ? 'Autorisation GPS refusée — active la localisation pour ce site.' : 'Signal GPS indisponible — réessaie à l\'air libre.')),
+            { enableHighAccuracy:true, timeout:15000, maximumAge:10000 }
+          );
+        });
+      }
+      async function discoGeocode(q){
+        try {
+          const r = await fetch('https://geocoding-api.open-meteo.com/v1/search?name=' + encodeURIComponent(q) + '&count=1&language=fr&format=json');
+          const d = await r.json();
+          if (d.results && d.results.length) return { lat:d.results[0].latitude, lng:d.results[0].longitude };
+        } catch(e){}
+        return null;
+      }
+      function discoStatus(kind, html){
+        const el = document.getElementById('disco-status'); if (!el) return;
+        el.style.display = ''; el.className = 'disco-status ' + kind;
+        el.innerHTML = (kind === 'load' ? '<span class="disco-spin"></span>' : '') + '<span>' + html + '</span>';
+      }
+      function discoBtn(busy){
+        const b = document.getElementById('disco-go'); if (!b) return;
+        b.disabled = busy; b.textContent = busy ? '⏳ Recherche…' : '🔎 Trouver des lieux';
+      }
+      async function runDiscovery(){
+        if (_discoBusy) return;
+        if (!_discoCats.length){ discoStatus('err', 'Choisis au moins une catégorie de lieux.'); return; }
+        const pr = discoPrep();
+        let center = null, pts, radius;
+        try {
+          if (_discoMode === 'around'){
+            const pos = await discoGetPos(); center = pos; pts = [pos]; radius = 30000;
+          } else if (_discoMode === 'area'){
+            const q = (document.getElementById('disco-area-q').value || '').trim();
+            if (!q){ discoStatus('err', 'Tape une ville ou un lieu à explorer.'); return; }
+            discoStatus('load', 'Localisation de « ' + famEsc(q) + ' »…');
+            center = await discoGeocode(q);
+            if (!center){ discoStatus('err', 'Lieu introuvable — essaie un autre nom.'); return; }
+            pts = [center]; radius = 35000;
+          } else {
+            pts = discoRoutePts(); radius = Math.min(60000, Math.max(22000, pr.detourMax * 1000));
+          }
+        } catch(e){ discoStatus('err', (e && e.message) || 'Impossible de te localiser.'); return; }
+
+        const around = '(around:' + Math.round(radius) + ',' + pts.map(p => p.lat.toFixed(4) + ',' + p.lng.toFixed(4)).join(',') + ')';
+        const query = discoQuery(_discoCats, around, _discoMode === 'route' ? 60 : 70);
+        _discoBusy = true; discoBtn(true);
+        discoStatus('load', 'Recherche de vrais lieux sur OpenStreetMap… (quelques secondes)');
+        try {
+          const els = await overpassFetch(query);
+          let list = normalizeDisco(els);
+          list.forEach(p => { p.detour = Math.round(distPointToRouteKm(p)); p._score = scoreDisco(p, pr, center); });
+          if (_discoMode === 'route') list = list.filter(p => p.detour <= pr.detourMax * 1.7);
+          list.sort((a, b) => b._score - a._score);
+          list = list.slice(0, 40);
+          _discoResults = list; registerDyn(list);
+          if (!list.length){ discoStatus('ok', 'Aucun lieu ici avec ces filtres — élargis les catégories ou la zone.'); renderDiscoResults(); return; }
+          discoStatus('ok', '✅ ' + list.length + ' lieu' + (list.length>1?'x':'') + ' trouvé' + (list.length>1?'s':'') + ' — classé' + (list.length>1?'s':'') + ' pour ton trajet.');
+          renderDiscoResults();
+          try { renderPoiMap(); } catch(e){}
+        } catch(e){
+          discoStatus('err', 'Service OpenStreetMap indisponible ou trop lent. Réessaie dans un instant.');
+        } finally { _discoBusy = false; discoBtn(false); }
+      }
+      function renderDiscoResults(){
+        const box = document.getElementById('disco-results'); if (!box) return;
+        const sel = getPoiSel();
+        box.innerHTML = _discoResults.map(p => {
+          const on = sel.includes(p.id);
+          const gm = 'https://www.google.com/maps/search/?api=1&query=' + p.lat + ',' + p.lng;
+          const tags = [];
+          tags.push(p.detour <= 8 ? '<span class="disco-tag route">✅ sur ta route</span>' : '<span class="disco-tag det">↪️ +' + p.detour + ' km</span>');
+          if (p.unesco) tags.push('<span class="disco-tag uns">★ patrimoine</span>');
+          if (p.wiki) tags.push('<span class="disco-tag wiki">📖 référencé</span>');
+          tags.push('<span class="disco-tag star">' + p.kindLbl + '</span>');
+          return '<div class="disco-item' + (on?' sel':'') + '" id="disco-' + p.id + '">'
+            + '<div class="disco-rank">' + p.emoji + '</div>'
+            + '<div class="disco-main"><div class="disco-name">' + famEsc(p.name) + '</div>'
+            + '<div class="disco-meta">' + tags.join('') + '</div></div>'
+            + '<div class="disco-act">'
+            + '<button class="btn ' + (on?'btn-secondary':'btn-primary') + '" onclick="togglePoi(\'' + p.id + '\')">' + (on?'✓ Retirer':'➕ Ajouter') + '</button>'
+            + '<a class="btn btn-secondary" href="' + gm + '" target="_blank" rel="noopener">📍 Carte</a>'
+            + '</div></div>';
+        }).join('');
+      }
+      function syncDiscoItem(id){
+        const el = document.getElementById('disco-' + id); if (!el) return;
+        const on = getPoiSel().includes(id);
+        el.classList.toggle('sel', on);
+        const b = el.querySelector('.disco-act .btn');
+        if (b){ b.className = 'btn ' + (on?'btn-secondary':'btn-primary'); b.textContent = on ? '✓ Retirer' : '➕ Ajouter'; }
+      }
+      function initDisco(){
+        const cbox = document.getElementById('disco-cats');
+        if (cbox && !cbox.dataset.init){
+          cbox.dataset.init = '1';
+          cbox.innerHTML = DISCO_CATS.map(c => '<button type="button" class="disco-cat' + (_discoCats.includes(c.id)?' on':'') + '" data-c="' + c.id + '">' + c.emoji + ' ' + c.label + '</button>').join('');
+          cbox.onclick = e => {
+            const b = e.target.closest('.disco-cat'); if (!b) return;
+            const id = b.dataset.c, i = _discoCats.indexOf(id);
+            if (i >= 0) _discoCats.splice(i, 1); else _discoCats.push(id);
+            b.classList.toggle('on');
+          };
+        }
+        const modes = document.getElementById('disco-modes');
+        if (modes && !modes.dataset.init){
+          modes.dataset.init = '1';
+          modes.onclick = e => {
+            const b = e.target.closest('.disco-mode'); if (!b) return;
+            _discoMode = b.dataset.m;
+            modes.querySelectorAll('.disco-mode').forEach(x => x.classList.toggle('on', x === b));
+            const area = document.getElementById('disco-area');
+            if (area) area.style.display = _discoMode === 'area' ? '' : 'none';
+          };
+        }
+        const go = document.getElementById('disco-go');
+        if (go && !go.dataset.init){ go.dataset.init = '1'; go.onclick = () => runDiscovery(); }
+        const aq = document.getElementById('disco-area-q');
+        if (aq && !aq.dataset.init){ aq.dataset.init = '1'; aq.addEventListener('keydown', e => { if (e.key === 'Enter') runDiscovery(); }); }
+        registerDyn(Object.values(getDynStore()));
+        updateDiscoPrep();
       }
 
       // ── Carte interactive des visites (Leaflet) ───────────────────
@@ -6424,6 +6750,23 @@
               + btn);
         });
 
+        // Lieux dynamiques (découverte OSM) : résultats trouvés + sélection persistée.
+        const dynSeen = {};
+        _discoResults.forEach(p => { dynSeen[p.id] = p; });
+        selectedPois().forEach(p => { if (p.dyn && !dynSeen[p.id]) dynSeen[p.id] = p; });
+        Object.keys(dynSeen).forEach(id => {
+          const p = dynSeen[id], on = sel.includes(id);
+          const dbtn = on
+            ? '<button class="btn btn-secondary" onclick="togglePoi(\''+id+'\')" style="margin-top:8px;padding:5px 10px;font-size:.76rem;width:100%">✓ Retirer du trajet</button>'
+            : '<button class="btn btn-primary" onclick="togglePoi(\''+id+'\')" style="margin-top:8px;padding:5px 10px;font-size:.76rem;width:100%">➕ Ajouter au trajet</button>';
+          L.marker([p.lat, p.lng], { icon: poiMapPin(p, on), zIndexOffset: on ? 1000 : 200 }).addTo(_poiMapLayer)
+            .bindPopup('<b>'+(p.emoji||'')+' '+famEsc(p.name)+'</b>'
+              + '<br><span style="color:#8fa5bc;font-size:.78rem">🛰️ '+famEsc(p.kindLbl||'Lieu OSM')
+              + (p.detour ? ' · ↪️ +'+p.detour+' km' : ' · ✅ sur la route')
+              + (p.unesco ? ' · ★' : '')+'</span>'
+              + dbtn);
+        });
+
         const badge = document.getElementById('poi-map-count');
         if (badge){ const n = sel.length; badge.textContent = n ? ('📍 '+n+' visite'+(n>1?'s':'')+' choisie'+(n>1?'s':'')) : 'Touche un point pour l\'ajouter'; }
         if (!_poiMapFitted){
@@ -6437,8 +6780,17 @@
         const sel = getPoiSel(); const i = sel.indexOf(id);
         if (i >= 0) sel.splice(i,1); else sel.push(id);
         setPoiSel(sel);
-        const card = document.getElementById('poi-'+id), p = VISIT_POI.find(x => x.id === id);
-        if (card && p) card.outerHTML = poiCard(p, sel.includes(id));
+        const on = sel.includes(id), p = poiById(id);
+        // Persiste les lieux dynamiques (hors VISIT_POI) pour qu'ils survivent au
+        // rechargement et s'affichent partout (carte, stats, itinéraire).
+        if (p && p.dyn){
+          const store = getDynStore();
+          if (on) store[id] = p; else delete store[id];
+          setDynStore(store);
+        }
+        const card = document.getElementById('poi-'+id);
+        if (card && p) card.outerHTML = poiCard(p, on);
+        try { syncDiscoItem(id); } catch(e){}
         renderPoiStats();
         if (poiMood) renderGuided();
         if (_nmWatch !== null) renderNearMe();
@@ -6529,8 +6881,7 @@
         window._refreshPoi = function(){
           if (!window._poiLayer) return;
           window._poiLayer.clearLayers();
-          const sel = getPoiSel();
-          VISIT_POI.filter(p => sel.includes(p.id)).forEach(p => {
+          selectedPois().forEach(p => {
             const icon = L.divIcon({ html:'<div class="poi-marker"><span>★</span></div>', className:'', iconSize:[26,26], iconAnchor:[13,24], popupAnchor:[0,-22] });
             L.marker([p.lat, p.lng], { icon }).addTo(window._poiLayer)
               .bindPopup(`<strong style="font-size:0.95rem">${p.flag} ${p.name}</strong><br/>
