@@ -13,7 +13,7 @@ function fakeEl() {
     style: { setProperty() {} },
     classList: { toggle() {}, add() {}, remove() {}, contains() { return false; } },
     addEventListener() {}, removeEventListener() {}, appendChild() {}, insertBefore() {},
-    setAttribute() {}, removeAttribute() {}, querySelector() { return fakeEl(); },
+    getAttribute() { return null; }, setAttribute() {}, removeAttribute() {}, querySelector() { return fakeEl(); },
     querySelectorAll() { return []; }, getContext() { return {}; },
     firstChild: null, value: '', checked: false, dataset: {}, offsetHeight: 52,
   };
