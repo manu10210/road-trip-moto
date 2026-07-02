@@ -421,6 +421,29 @@
       .ride-border.done { background:rgba(34,197,94,0.12); border-color:rgba(34,197,94,0.35); color:#86efac; }
       .ride-controls { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; max-width:430px; width:100%; align-self:center; margin-top:auto; padding-bottom:4px; }
       .ride-controls .btn { flex:1; min-width:130px; padding:13px; font-size:.95rem; }
+      /* Rappel pause nuque (Mode Pilote) — relié au profil cervical C3–C4 */
+      .ride-pause { max-width:430px; width:100%; align-self:center; display:flex; align-items:center; gap:11px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:11px 14px; margin:0 0 10px; font-size:.82rem; }
+      .ride-pause .rp-ic { font-size:1.3rem; flex:none; }
+      .ride-pause .rp-txt { flex:1; min-width:0; line-height:1.35; }
+      .ride-pause .rp-txt b { color:var(--accent); font-variant-numeric:tabular-nums; }
+      .ride-pause.due { background:rgba(245,158,11,0.14); border-color:rgba(245,158,11,0.5); animation:pausePulse 1.4s infinite; }
+      .ride-pause.due .rp-ic { color:#f59e0b; }
+      .ride-pause .rp-done { flex:none; background:rgba(34,197,94,0.16); border:1px solid rgba(34,197,94,0.4); color:#86efac; border-radius:20px; padding:5px 11px; font-size:.72rem; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; }
+      @keyframes pausePulse { 0%,100%{ box-shadow:0 0 0 0 rgba(245,158,11,0.4);} 50%{ box-shadow:0 0 0 6px rgba(245,158,11,0);} }
+      @media (prefers-reduced-motion:reduce){ .ride-pause.due{ animation:none; } }
+      /* « Ta journée type » — découpage conduite / pauses selon le profil pilote */
+      .pjour-bar { display:flex; height:36px; border-radius:10px; overflow:hidden; border:1px solid var(--border); }
+      .pjour-seg { display:flex; align-items:center; justify-content:center; font-size:.82rem; min-width:12px; }
+      .pjour-seg.ride { background:linear-gradient(135deg, rgba(245,158,11,0.5), rgba(249,115,22,0.42)); }
+      .pjour-seg.pause { background:rgba(20,184,166,0.22); }
+      .pjour-legend { display:flex; flex-wrap:wrap; gap:16px; margin-top:12px; font-size:.78rem; color:var(--muted); }
+      .pjour-legend > span { display:inline-flex; align-items:center; gap:6px; }
+      .pjour-legend .sw { width:13px; height:13px; border-radius:4px; flex:none; }
+      .pjour-legend .sw.ride { background:linear-gradient(135deg,#f59e0b,#f97316); }
+      .pjour-legend .sw.pause { background:rgba(20,184,166,0.55); }
+      .pjour-sum { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+      .pjour-chip { font-size:.78rem; background:var(--bg); border:1px solid var(--border); border-radius:20px; padding:6px 13px; color:var(--text); }
+      .pjour-chip b { color:var(--accent); font-variant-numeric:tabular-nums; }
       /* ── Dépenses ───────────────────────────────────────── */
       .exp-row { display:flex; align-items:center; gap:11px; padding:11px 0; border-bottom:1px solid var(--border); }
       .exp-row:last-child { border-bottom:none; }
@@ -1041,6 +1064,12 @@
           <h2>📊 Ce que ça change pour toi</h2>
           <div class="pf-sum-grid" id="pf-summary"></div>
           <div id="pf-risk"></div>
+        </div>
+
+        <div class="card">
+          <h2>🕒 Ta journée type sur la route</h2>
+          <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px">Comment se découpe une journée à ton rythme — de la conduite entrecoupée de <strong style="color:#5eead4">pauses nuque</strong>. Le découpage s'ajuste <strong style="color:var(--accent)">en direct</strong> selon ton profil ci-dessus.</p>
+          <div id="pf-day"></div>
         </div>
 
         <div class="card">
@@ -2029,6 +2058,11 @@
         <div class="ride-cell"><div class="v" id="ride-avg">0</div><div class="l">📊 Moy km/h</div></div>
       </div>
       <div class="ride-gps" id="ride-gps">📍 En attente du signal GPS…</div>
+      <div class="ride-pause" id="ride-pause" style="display:none">
+        <span class="rp-ic" id="rp-ic">🦴</span>
+        <span class="rp-txt" id="rp-txt">Prochaine pause nuque dans <b>—</b></span>
+        <button type="button" class="rp-done" onclick="ridePauseDone()">✓ Pause faite</button>
+      </div>
       <div class="ride-border" id="ride-border"></div>
       <div class="ride-controls">
         <button class="btn btn-primary" id="ride-start" onclick="toggleRide()">▶️ Démarrer</button>
@@ -2556,7 +2590,8 @@
         localStorage.setItem('roadtrip_pilote', JSON.stringify(p));
         renderPilote();
         const pc = computePilote(p);
-        alert(`✅ Profil pilote enregistré${p.name ? (' — ' + p.name) : ''} !\n\n🦴 Pause nuque toutes les ${pc.breakMin} min\n🛣️ Distance/jour conseillée : ${pc.maxKm} km\n⛑️ Casque taille ${pc.helmet} (≤ ${pc.helmetMax} g)`);
+        showToast('Profil pilote enregistré' + (p.name ? (' — <b>' + famEsc(p.name) + '</b>') : '') + ' !'
+          + '<br><span style="color:var(--muted)">🦴 Pause nuque toutes les ' + pc.breakMin + ' min · 🛣️ ' + pc.maxKm + ' km/jour · ⛑️ Casque ' + pc.helmet + '</span>', { icon:'✅', duration:9000 });
       }
       function resetPilote(){
         localStorage.removeItem('roadtrip_pilote');
@@ -2571,7 +2606,43 @@
         const stage = document.getElementById('bike-stage-km'); if (stage) stage.value = pc.maxKm;
         if (typeof renderBikeComfort === 'function') renderBikeComfort();
         renderPilote();
-        alert(`⚙️ Plan adapté à ton profil :\n\n🛣️ Km/jour ramené à ${pc.maxKm} km${p.neck ? ' (cervicales C3–C4)' : ''}\n🦴 Pause nuque toutes les ${pc.breakMin} min\n\nLe simulateur de « Ma Moto » et tes paramètres de trajet sont à jour.`);
+        showToast('Plan adapté à ton profil !<br><span style="color:var(--muted)">🛣️ Km/jour ramené à <b>' + pc.maxKm + ' km</b>' + (p.neck ? ' (cervicales C3–C4)' : '') + ' · 🦴 pause toutes les ' + pc.breakMin + ' min</span>', { icon:'⚙️', duration:9000 });
+      }
+      // « Ta journée type » : découpe la distance/jour conseillée en segments de
+      // conduite (durée = intervalle de pause nuque) séparés par des pauses, et
+      // en fait une frise visuelle proportionnelle au temps. Purement illustratif.
+      function pfFmtDur(min){
+        const h = Math.floor(min/60), m = Math.round(min%60);
+        return h ? `${h} h ${String(m).padStart(2,'0')}` : `${m} min`;
+      }
+      function renderPiloteDay(pc){
+        const host = document.getElementById('pf-day'); if (!host) return;
+        const pauseMin = 12; // durée type d'une pause nuque entre deux segments
+        const segments = Math.max(1, Math.ceil(pc.maxKm / Math.max(20, pc.breakKm)));
+        const rideMin = segments * pc.breakMin;
+        const totalPauseMin = (segments - 1) * pauseMin;
+        const totalMin = rideMin + totalPauseMin;
+        let bar = '';
+        for (let i = 0; i < segments; i++){
+          const w = (pc.breakMin / totalMin * 100).toFixed(2);
+          bar += `<div class="pjour-seg ride" style="flex:0 0 ${w}%" title="Conduite ~${pc.breakMin} min (≈ ${Math.round(pc.breakKm)} km)">🏍️</div>`;
+          if (i < segments - 1){
+            const pw = (pauseMin / totalMin * 100).toFixed(2);
+            bar += `<div class="pjour-seg pause" style="flex:0 0 ${pw}%" title="Pause nuque ~${pauseMin} min">☕</div>`;
+          }
+        }
+        const pauses = segments - 1;
+        host.innerHTML = `<div class="pjour-bar">${bar}</div>
+          <div class="pjour-legend">
+            <span><i class="sw ride"></i>Conduite ~${pc.breakMin} min</span>
+            <span><i class="sw pause"></i>Pause nuque ~${pauseMin} min</span>
+          </div>
+          <div class="pjour-sum">
+            <span class="pjour-chip">🛣️ <b>${pc.maxKm} km</b> / jour</span>
+            <span class="pjour-chip">🏍️ <b>${segments}</b> segment${segments>1?'s':''} de conduite</span>
+            <span class="pjour-chip">☕ <b>${pauses}</b> pause${pauses>1?'s':''} nuque</span>
+            <span class="pjour-chip">⏱️ ~<b>${pfFmtDur(totalMin)}</b> sur la route</span>
+          </div>`;
       }
       function renderPilote(){
         if (!document.getElementById('pf-summary')) return;
@@ -2598,6 +2669,8 @@
         document.getElementById('pf-risk').innerHTML = p.neck
           ? `<div class="bike-risk ${p.rot === 'limited' ? 'mid' : 'low'}" style="margin-top:12px">🦴 Profil cervical C3–C4 actif : étapes plafonnées à <strong>${pc.maxKm} km/jour</strong>, pause nuque toutes les <strong>${pc.breakMin} min (≈ ${pc.breakKm} km)</strong>. Le simulateur d'étape de l'onglet <strong>🏍️ Ma Moto</strong> en tient compte automatiquement.</div>`
           : `<div class="bike-risk low" style="margin-top:12px">✅ Profil standard : ${pc.maxKm} km/jour, pause toutes les ${pc.breakMin} min.</div>`;
+
+        renderPiloteDay(pc);
 
         // Échauffement cervical
         const exo = [
@@ -7395,14 +7468,50 @@
       });
 
       // ── Mode Pilote (ordinateur de bord GPS) ──────────────────────
-      const ride = { watch:null, timer:null, running:false, dist:0, max:0, last:null, lastT:0, t0:0, elapsed:0, speeds:[], wake:null };
+      const ride = { watch:null, timer:null, running:false, dist:0, max:0, last:null, lastT:0, t0:0, elapsed:0, speeds:[], wake:null, pauseAnchor:0, pauseAlerted:false };
       const ARC_LEN = 376.99, MAX_KMH = 180;
       const CARDINAL = ['N','NE','E','SE','S','SO','O','NO'];
 
       document.getElementById('rideBtn').addEventListener('click', openRide);
-      function openRide(){ document.getElementById('ride-overlay').classList.add('open'); }
+      function openRide(){ document.getElementById('ride-overlay').classList.add('open'); renderRidePause(); }
       function closeRide(){ stopRide(); document.getElementById('ride-overlay').classList.remove('open'); }
       window.openRide = openRide; window.closeRide = closeRide;
+
+      // ── Rappel pause nuque (relié au profil pilote C3–C4) ──────────
+      // Le profil calcule un intervalle de pause (breakMin). Pendant le trajet
+      // GPS, on décompte ce temps et on alerte quand il est temps de reposer
+      // la nuque — le geste-clé pour une cervicale arthrodésée sur long trajet.
+      function ridePauseBreakMin(){
+        try { return computePilote(loadPilote()).breakMin || 45; } catch(e){ return 45; }
+      }
+      function renderRidePause(){
+        const box = document.getElementById('ride-pause'); if (!box) return;
+        box.style.display = 'flex';
+        const breakMs = ridePauseBreakMin() * 60000;
+        const elapsed = ride.running ? (Date.now() - ride.t0) : ride.elapsed;
+        const remain = breakMs - (elapsed - (ride.pauseAnchor || 0));
+        const txt = document.getElementById('rp-txt');
+        if (remain <= 0){
+          box.classList.add('due');
+          if (txt) txt.innerHTML = 'Temps de <b>reposer ta nuque</b> — fais une pause dès que possible';
+          if (!ride.pauseAlerted){
+            ride.pauseAlerted = true;
+            try { if (navigator.vibrate) navigator.vibrate([200,100,200]); } catch(e){}
+            showToast('🦴 <b>Pause nuque conseillée</b><br><span style="color:var(--muted)">Ça fait ' + ridePauseBreakMin() + ' min que tu roules. Étire doucement nuque et épaules avant de repartir.</span>', { icon:'🦴', type:'warn', duration:12000 });
+          }
+        } else {
+          box.classList.remove('due');
+          const m = Math.floor(remain/60000), s = Math.floor(remain%60000/1000);
+          if (txt) txt.innerHTML = 'Prochaine pause nuque dans <b>' + m + ':' + String(s).padStart(2,'0') + '</b>';
+        }
+      }
+      function ridePauseDone(){
+        ride.pauseAnchor = ride.running ? (Date.now() - ride.t0) : ride.elapsed;
+        ride.pauseAlerted = false;
+        renderRidePause();
+        showToast('Nuque reposée 🦴 — c\'est reparti pour ' + ridePauseBreakMin() + ' min !', { icon:'✅' });
+      }
+      window.ridePauseDone = ridePauseDone;
 
       function haversine(a, b){
         const R=6371000, toR=x=>x*Math.PI/180;
@@ -7461,7 +7570,7 @@
       window.toggleRide = toggleRide;
 
       async function startRide(){
-        if (!navigator.geolocation){ alert('GPS non disponible sur cet appareil.'); return; }
+        if (!navigator.geolocation){ showToast('GPS non disponible sur cet appareil.', { type:'danger', icon:'🚫' }); return; }
         ride.running = true; ride.t0 = Date.now() - ride.elapsed;
         document.getElementById('ride-start').innerHTML = '⏸️ Pause';
         setRideStatus('live','● EN DIRECT');
@@ -7481,7 +7590,7 @@
       }
       function resetRide(){
         stopRide();
-        Object.assign(ride, { dist:0, max:0, last:null, lastT:0, t0:0, elapsed:0, speeds:[] });
+        Object.assign(ride, { dist:0, max:0, last:null, lastT:0, t0:0, elapsed:0, speeds:[], pauseAnchor:0, pauseAlerted:false });
         drawSpeed(0);
         document.getElementById('ride-dist').textContent='0.0';
         document.getElementById('ride-max').textContent='0';
@@ -7493,6 +7602,7 @@
         setRideStatus('idle','● GPS OFF');
         const g=document.getElementById('ride-gps'); g.className='ride-gps'; g.textContent='📍 En attente du signal GPS…';
         try { renderRideBorder(null); } catch(e){}
+        try { renderRidePause(); } catch(e){}
       }
       window.resetRide = resetRide;
 
@@ -7503,7 +7613,7 @@
         const distKm = ride.dist/1000;
         const durMs = ride.running ? (Date.now() - ride.t0) : ride.elapsed;
         if (distKm < 0.5 && durMs < 60000){
-          alert("Pas encore de trajet mesuré 🛰️\nLance le Mode Pilote (▶️ Démarrer) et roule un peu avant d'enregistrer l'étape.");
+          showToast('Pas encore de trajet mesuré 🛰️<br><span style="color:var(--muted)">Lance le Mode Pilote (▶️ Démarrer) et roule un peu avant d\'enregistrer l\'étape.</span>', { type:'warn', icon:'🛰️', duration:8000 });
           return;
         }
         const movAvg = ride.speeds.length ? ride.speeds.reduce((a,b)=>a+b,0)/ride.speeds.length : 0;
@@ -7536,11 +7646,11 @@
         if (ride.last) entry.gps = `${ride.last.lat.toFixed(5)}, ${ride.last.lng.toFixed(5)}`;
         entries.push(entry);
         try { localStorage.setItem('roadtrip_diary', JSON.stringify(entries)); }
-        catch(e){ alert('Stockage plein : supprime d\'anciennes étapes.'); return; }
+        catch(e){ showToast('Stockage plein : supprime d\'anciennes étapes pour libérer de la place.', { type:'danger', icon:'🚫', duration:9000 }); return; }
         loadDiary();
         closeRide();
         showTab('diary');
-        alert(`📔 Étape « ${name} » ajoutée au carnet de bord !\n👉 Tu la retrouves quand tu veux dans l'onglet « 📔 Carnet ».\n\n📏 ${distKm.toFixed(1)} km · 📊 ${Math.round(movAvg)} km/h moy · 🚀 ${Math.round(ride.max)} km/h max · ⏱️ ${cbFmtDur(durMs)}`);
+        showToast('Étape « <b>' + famEsc(name) + '</b> » ajoutée au carnet !<br><span style="color:var(--muted)">📏 ' + distKm.toFixed(1) + ' km · 📊 ' + Math.round(movAvg) + ' km/h moy · 🚀 ' + Math.round(ride.max) + ' km/h max · ⏱️ ' + cbFmtDur(durMs) + '</span>', { icon:'📔', duration:11000 });
       };
 
       function setRideStatus(cls,txt){ const el=document.getElementById('ride-status'); el.className='ride-badge '+cls; el.textContent=txt; }
@@ -7548,6 +7658,7 @@
         const ms = ride.running ? Date.now()-ride.t0 : ride.elapsed;
         const tot=Math.floor(ms/1000), h=Math.floor(tot/3600), m=Math.floor(tot%3600/60), s=tot%60;
         document.getElementById('ride-time').textContent = h?`${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`:`${m}:${String(s).padStart(2,'0')}`;
+        try { renderRidePause(); } catch(e){}
       }
       function onRidePos(pos){
         const c = pos.coords;
