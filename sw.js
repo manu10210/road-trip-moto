@@ -1,4 +1,4 @@
-const CACHE = 'roadtrip-v52';
+const CACHE = 'roadtrip-v53';
 const STATIC = ['/', '/index.html', '/icon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png', '/manifest.json'];
 
 self.addEventListener('install', e => {
@@ -19,7 +19,6 @@ self.addEventListener('fetch', e => {
   // Ne pas intercepter : POST, API, et ressources externes (tuiles, météo, CDN…)
   if (req.method !== 'GET' || u.includes('/api/') || u.includes('openstreetmap') ||
       u.includes('open-meteo') || u.includes('geocoding-api') ||
-      u.includes('overpass') || u.includes('maps.mail.ru') ||
       u.includes('unpkg.com')) return;
 
   // Pages HTML (navigation) → NETWORK-FIRST : toujours la dernière version quand il

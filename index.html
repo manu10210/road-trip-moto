@@ -6448,14 +6448,13 @@
       // Chaque lieu est scoré selon les paramètres de préparation (km/jour →
       // budget de détour). Gratuit, sans clé. Repli hors-ligne : la sélection
       // curatée VISIT_POI reste toujours dispo.
-      const OVERPASS_EPS = ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter'];
       const DISCO_CATS = [
-        { id:'castle',   emoji:'🏰', label:'Châteaux & forts',   sel:['["historic"~"castle|fort|manor|palace|city_gate"]'] },
-        { id:'heritage', emoji:'🏛️', label:'Monuments & ruines', sel:['["historic"~"monument|memorial|ruins|archaeological_site"]'] },
-        { id:'view',     emoji:'🌄', label:'Panoramas',          sel:['["tourism"="viewpoint"]'] },
-        { id:'nature',   emoji:'🏞️', label:'Nature',             sel:['["natural"~"peak|waterfall"]','["waterway"="waterfall"]','["leisure"="nature_reserve"]'] },
-        { id:'museum',   emoji:'🖼️', label:'Musées',             sel:['["tourism"="museum"]'] },
-        { id:'sight',    emoji:'✨', label:'Incontournables',    sel:['["tourism"="attraction"]'] }
+        { id:'castle',   emoji:'🏰', label:'Châteaux & forts' },
+        { id:'heritage', emoji:'🏛️', label:'Monuments & ruines' },
+        { id:'view',     emoji:'🌄', label:'Panoramas' },
+        { id:'nature',   emoji:'🏞️', label:'Nature' },
+        { id:'museum',   emoji:'🖼️', label:'Musées' },
+        { id:'sight',    emoji:'✨', label:'Incontournables' }
       ];
       let _discoMode = 'route', _discoCats = ['castle','heritage','view','nature','sight'], _discoResults = [], _discoBusy = false;
 
@@ -6502,27 +6501,22 @@
         return best;
       }
 
-      // ── Client Overpass : timeout + bascule sur miroir ────────────
-      async function overpassFetch(query){
-        let lastErr;
-        for (const ep of OVERPASS_EPS){
-          const ctrl = new AbortController();
-          const to = setTimeout(() => ctrl.abort(), 22000);
-          try {
-            const r = await fetch(ep, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:'data=' + encodeURIComponent(query), signal:ctrl.signal });
-            clearTimeout(to);
-            if (!r.ok) throw new Error('HTTP ' + r.status);
-            const d = await r.json();
-            return d.elements || [];
-          } catch(e){ clearTimeout(to); lastErr = e; }
-        }
-        throw lastErr || new Error('Overpass indisponible');
-      }
-      function discoQuery(catIds, aroundClause, perCat){
-        let body = '';
-        DISCO_CATS.filter(c => catIds.includes(c.id)).forEach(c =>
-          c.sel.forEach(s => { body += 'nwr' + s + '["name"]' + aroundClause + ';'; }));
-        return '[out:json][timeout:25];(' + body + ');out center ' + (perCat||70) + ';';
+      // ── Client de découverte : appelle notre proxy /api/poi ───────
+      // Le proxy interroge Overpass côté serveur (en-têtes propres, rotation de
+      // miroirs, cache CDN) et renvoie des éléments compacts { type,id,lat,lon,tags }
+      // — mêmes champs qu'Overpass brut, donc normalizeDisco reste compatible.
+      async function fetchDiscover(pts, radius, cats){
+        const url = '/api/poi?cats=' + encodeURIComponent(cats.join(','))
+          + '&radius=' + Math.round(radius)
+          + '&pts=' + encodeURIComponent(pts.map(p => p.lat.toFixed(3) + ',' + p.lng.toFixed(3)).join(';'));
+        const ctrl = new AbortController();
+        const to = setTimeout(() => ctrl.abort(), 27000);
+        try {
+          const r = await fetch(url, { signal:ctrl.signal });
+          const d = await r.json().catch(() => null);
+          if (!r.ok || !d || !d.ok) throw new Error((d && d.error) || ('HTTP ' + r.status));
+          return d.elements || [];
+        } finally { clearTimeout(to); }
       }
 
       // ── Normalisation OSM → même forme que VISIT_POI ──────────────
@@ -6620,16 +6614,14 @@
             if (!center){ discoStatus('err', 'Lieu introuvable — essaie un autre nom.'); return; }
             pts = [center]; radius = 35000;
           } else {
-            pts = discoRoutePts(); radius = Math.min(60000, Math.max(22000, pr.detourMax * 1000));
+            pts = discoRoutePts(); radius = Math.min(42000, Math.max(18000, pr.detourMax * 1000));
           }
         } catch(e){ discoStatus('err', (e && e.message) || 'Impossible de te localiser.'); return; }
 
-        const around = '(around:' + Math.round(radius) + ',' + pts.map(p => p.lat.toFixed(4) + ',' + p.lng.toFixed(4)).join(',') + ')';
-        const query = discoQuery(_discoCats, around, _discoMode === 'route' ? 60 : 70);
         _discoBusy = true; discoBtn(true);
         discoStatus('load', 'Recherche de vrais lieux sur OpenStreetMap… (quelques secondes)');
         try {
-          const els = await overpassFetch(query);
+          const els = await fetchDiscover(pts, radius, _discoCats);
           let list = normalizeDisco(els);
           list.forEach(p => { p.detour = Math.round(distPointToRouteKm(p)); p._score = scoreDisco(p, pr, center); });
           if (_discoMode === 'route') list = list.filter(p => p.detour <= pr.detourMax * 1.7);
@@ -6641,7 +6633,7 @@
           renderDiscoResults();
           try { renderPoiMap(); } catch(e){}
         } catch(e){
-          discoStatus('err', 'Service OpenStreetMap indisponible ou trop lent. Réessaie dans un instant.');
+          discoStatus('err', 'Service OpenStreetMap indisponible ou surchargé. Réessaie dans un instant — ta sélection « coups de cœur » reste dispo.');
         } finally { _discoBusy = false; discoBtn(false); }
       }
       function renderDiscoResults(){
