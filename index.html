@@ -294,6 +294,26 @@
       .lg-search-links { display:flex; flex-wrap:wrap; gap:8px; }
       .lg-search-links .btn { text-decoration:none; font-size:.82rem; padding:8px 14px; }
       .lg-find { font-size:.76rem !important; padding:6px 11px !important; text-decoration:none; }
+      /* ── Frontières : passeport de route + kit de conformité ── */
+      .borders-hero { background:linear-gradient(125deg, rgba(20,184,166,0.16), rgba(56,189,248,0.09) 55%, rgba(59,130,246,0.08)); border:1px solid rgba(20,184,166,0.32); position:relative; overflow:hidden; }
+      .borders-hero::before { content:''; position:absolute; right:-45px; top:-45px; width:190px; height:190px; border-radius:50%; background:radial-gradient(circle, rgba(20,184,166,0.22), transparent 70%); pointer-events:none; }
+      .bh-count { font-size:2.4rem; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; background:linear-gradient(135deg,#5eead4,#38bdf8 60%,#60a5fa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+      .bh-count .bh-unit { font-size:1rem; font-weight:700; -webkit-text-fill-color:#7dd3fc; }
+      .bh-sub { font-size:.83rem; color:var(--muted); margin-top:7px; font-weight:600; }
+      .brd-flags { display:flex; flex-wrap:wrap; align-items:center; gap:6px; margin-top:15px; }
+      .brd-flag { display:inline-flex; align-items:center; gap:5px; padding:6px 11px; border-radius:11px; border:1px solid var(--border); background:var(--bg); cursor:pointer; font-family:inherit; transition:transform .15s, border-color .15s; }
+      .brd-flag:hover { border-color:rgba(56,189,248,0.6); transform:translateY(-2px); }
+      .brd-flag .bf-flag { font-size:1.15rem; line-height:1; }
+      .brd-flag .bf-code { font-size:.74rem; font-weight:800; color:var(--muted); letter-spacing:.03em; }
+      .brd-arrow { color:var(--muted); font-size:.8rem; opacity:.55; }
+      .brd-kit li { align-items:center; }
+      .bk-ic { margin-right:7px; }
+      .brd-kit-flags { font-size:.92rem; letter-spacing:1px; margin-left:6px; white-space:nowrap; }
+      .brd-card { scroll-margin-top:96px; }
+      @keyframes brdFlash { 0%{ box-shadow:0 0 0 0 rgba(56,189,248,0.5); } 100%{ box-shadow:0 0 0 14px rgba(56,189,248,0); } }
+      .brd-card.brd-flash { animation:brdFlash 1s ease-out; border-color:rgba(56,189,248,0.5); }
+      a.badge { text-decoration:none; transition:filter .15s; }
+      a.badge:hover { filter:brightness(1.2); }
       /* ── Scènes illustrées (SVG inline · 100% hors-ligne) ─ */
       .hero { position:relative; border-radius:var(--radius); overflow:hidden; margin-bottom:16px; border:1px solid var(--border); box-shadow:var(--shadow); }
       .hero svg { display:block; width:100%; height:auto; }
@@ -2985,13 +3005,39 @@
 
       function renderBorders(p) {
         document.getElementById('borders-empty').style.display = 'none';
-        document.getElementById('borders-content').style.display = '';
-        document.getElementById('borders-content').innerHTML = p.borderChecklist.map(c => `
+        const host = document.getElementById('borders-content');
+        host.style.display = '';
+        const list = p.borderChecklist || [];
+
+        // ── Passeport : stats + bande de drapeaux cliquables ──
+        const currencies = [...new Set(list.map(c => c.currency).filter(Boolean))];
+        const crossings = Math.max(0, list.length - 1);
+        const flagStrip = list.map(c =>
+          `<button type="button" class="brd-flag" data-code="${c.countryCode}"><span class="bf-flag">${c.flag}</span><span class="bf-code">${c.countryCode}</span></button>`
+        ).join('<span class="brd-arrow">→</span>');
+        const hero = `
+          <div class="card borders-hero">
+            <div class="bh-count">${list.length}<span class="bh-unit"> pays traversés</span></div>
+            <div class="bh-sub">🛂 ${crossings} frontière${crossings>1?'s':''} à franchir · 💱 ${currencies.length} devise${currencies.length>1?'s':''}${currencies.length?' ('+currencies.join(', ')+')':''}</div>
+            <div class="brd-flags" id="brd-flags">${flagStrip}</div>
+          </div>`;
+
+        // ── Kit de conformité : docs + équipements agrégés, dédupliqués ──
+        const kitCard = `
           <div class="card">
+            <div class="cl-hd"><h2>🎒 Ton kit obligatoire · tous pays</h2><span class="cl-prog-row" id="brd-kit-prog">0/0</span></div>
+            <div class="cl-prog-wrap"><div class="cl-prog-fill" id="brd-kit-bar" style="width:0%"></div></div>
+            <p class="hint" style="margin-bottom:6px">Tout ce que tu dois avoir sur toi pour être en règle sur <strong>toute</strong> ta route — fusionné depuis chaque pays. Coché = prêt (sauvegardé auto).</p>
+            <ul class="cl brd-kit" id="brd-kit"></ul>
+          </div>`;
+
+        // ── Fiches détaillées par pays (référence + ancres de saut) ──
+        const cards = list.map(c => `
+          <div class="card brd-card" id="brd-card-${c.countryCode}">
             <h2>${c.flag} ${c.name} <span style="font-size:0.78rem;color:var(--muted);font-weight:400">(${c.countryCode}) · ${c.currency||''}</span></h2>
             <h3>📄 Documents obligatoires</h3>
-            <ul class="cl">${c.documents.map(d=>`<li><input type="checkbox">${d}</li>`).join('')}</ul>
-            ${c.equipment&&c.equipment.length?`<h3>🦺 Équipements requis</h3><ul class="cl">${c.equipment.map(e=>`<li><input type="checkbox">${e}</li>`).join('')}</ul>`:''}
+            <ul class="cl">${c.documents.map(d=>`<li><span>📄</span>${d}</li>`).join('')}</ul>
+            ${c.equipment&&c.equipment.length?`<h3>🦺 Équipements requis</h3><ul class="cl">${c.equipment.map(e=>`<li><span>🦺</span>${e}</li>`).join('')}</ul>`:''}
             ${c.speedLimits?`<h3>🚀 Limitations de vitesse</h3><div style="margin-top:6px;line-height:2.2">
               <span class="badge">🛣️ Autoroute : ${c.speedLimits.highway}</span>
               <span class="badge">🏞️ Nationale : ${c.speedLimits.national}</span>
@@ -3006,14 +3052,81 @@
               }</div>`:''}
             ${c.notes&&c.notes.length?`<h3>📝 Notes pratiques</h3><ul class="cl">${c.notes.map(n=>`<li><span>ℹ️</span>${n}</li>`).join('')}</ul>`:''}
             ${c.fuelPriceEstimate&&c.fuelPriceEstimate!=='N/A'?`<div class="alert">⛽ Carburant : ${c.fuelPriceEstimate}</div>`:''}
-            ${c.emergencyNumbers?`<h3>🆘 Numéros d'urgence</h3>
+            ${c.emergencyNumbers?`<h3>🆘 Numéros d'urgence <span style="font-size:.72rem;color:var(--muted);font-weight:400">· tape pour appeler</span></h3>
               <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px">
-                <span class="badge badge-police">🚔 Police : ${c.emergencyNumbers.police}</span>
-                <span class="badge badge-ambulance">🚑 Ambulance : ${c.emergencyNumbers.ambulance}</span>
-                <span class="badge badge-fire">🔥 Pompiers : ${c.emergencyNumbers.fire}</span>
-                <span class="badge badge-breakdown">🔧 Dépannage : ${c.emergencyNumbers.breakdown}</span>
+                <a class="badge badge-police" href="tel:${telClean(c.emergencyNumbers.police)}">🚔 Police : ${c.emergencyNumbers.police}</a>
+                <a class="badge badge-ambulance" href="tel:${telClean(c.emergencyNumbers.ambulance)}">🚑 Ambulance : ${c.emergencyNumbers.ambulance}</a>
+                <a class="badge badge-fire" href="tel:${telClean(c.emergencyNumbers.fire)}">🔥 Pompiers : ${c.emergencyNumbers.fire}</a>
+                <a class="badge badge-breakdown" href="tel:${telClean(c.emergencyNumbers.breakdown)}">🔧 Dépannage : ${c.emergencyNumbers.breakdown}</a>
               </div>`:''}
           </div>`).join('');
+
+        host.innerHTML = hero + kitCard + cards;
+
+        // Kit interactif (agrégé + persistant), puis navigation par drapeaux.
+        renderBorderKit(buildBorderKit(list));
+        const flagsEl = document.getElementById('brd-flags');
+        if (flagsEl) flagsEl.onclick = e => {
+          const b = e.target.closest('.brd-flag'); if (!b) return;
+          const card = document.getElementById('brd-card-' + b.dataset.code);
+          if (!card) return;
+          card.scrollIntoView({ behavior:'smooth', block:'start' });
+          card.classList.remove('brd-flash'); void card.offsetWidth; card.classList.add('brd-flash');
+        };
+      }
+      function telClean(n){ return String(n==null?'':n).replace(/[^\d+]/g, ''); }
+
+      // Fusionne documents + équipements de tous les pays en une liste unique ;
+      // chaque item est taggé avec les drapeaux des pays qui l'exigent.
+      function buildBorderKit(list){
+        const map = new Map();
+        const add = (label, flag, kind) => {
+          const t = String(label==null?'':label).trim(); if (!t) return;
+          const key = kind + '|' + t.toLowerCase();
+          if (!map.has(key)) map.set(key, { key, label:t, kind, flags:[] });
+          const e = map.get(key);
+          if (flag && !e.flags.includes(flag)) e.flags.push(flag);
+        };
+        (list||[]).forEach(c => {
+          (c.documents||[]).forEach(d => add(d, c.flag, 'doc'));
+          (c.equipment||[]).forEach(eq => add(eq, c.flag, 'equip'));
+        });
+        // Documents d'abord, puis équipements ; au sein, les plus exigés en tête.
+        return [...map.values()].sort((a,b) =>
+          a.kind===b.kind ? b.flags.length-a.flags.length : (a.kind==='doc'?-1:1));
+      }
+
+      function renderBorderKit(items){
+        const ul = document.getElementById('brd-kit'); if (!ul) return;
+        let saved = {};
+        try { saved = JSON.parse(localStorage.getItem('roadtrip_borderkit')||'{}')||{}; } catch(e){}
+        ul.innerHTML = items.map(it => {
+          const icon = it.kind==='doc' ? '📄' : '🦺';
+          return `<li><input type="checkbox" data-k="${famEsc(it.key)}" ${saved[it.key]?'checked':''}>`
+            + `<span><span class="bk-ic">${icon}</span>${famEsc(it.label)}`
+            + `<span class="brd-kit-flags">${it.flags.join('')}</span></span></li>`;
+        }).join('');
+        ul.onchange = e => {
+          if (e.target.type !== 'checkbox') return;
+          let s = {}; try { s = JSON.parse(localStorage.getItem('roadtrip_borderkit')||'{}')||{}; } catch(er){}
+          s[e.target.dataset.k] = e.target.checked;
+          localStorage.setItem('roadtrip_borderkit', JSON.stringify(s));
+          if (borderKitProgress()) showToast('Kit complet — tu es en règle dans tous les pays ! 🛂', { icon:'🎒', type:'success' });
+        };
+        borderKitProgress();
+      }
+
+      // Barre de progression du kit ; renvoie true si tout est coché.
+      function borderKitProgress(){
+        const ul = document.getElementById('brd-kit'); if (!ul) return false;
+        const all = ul.querySelectorAll('input[type=checkbox]');
+        const chk = ul.querySelectorAll('input[type=checkbox]:checked');
+        const pct = all.length ? chk.length/all.length*100 : 0;
+        const prog = document.getElementById('brd-kit-prog');
+        const bar  = document.getElementById('brd-kit-bar');
+        if (prog){ prog.textContent = chk.length+'/'+all.length; prog.style.color = pct===100?'var(--success)':'var(--muted)'; }
+        if (bar){ bar.style.width = pct+'%'; bar.style.background = pct===100?'var(--success)':''; }
+        return all.length>0 && chk.length===all.length;
       }
 
       function renderLodging(p) {
