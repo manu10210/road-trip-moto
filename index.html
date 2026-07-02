@@ -282,6 +282,18 @@
       .lg-step-lbl { font-size:.72rem; color:var(--muted); padding:0 10px 0 3px; }
       .lg-sub { font-size:.82rem; font-weight:700; color:var(--success); font-variant-numeric:tabular-nums; white-space:nowrap; }
       .lg-sub.skip { color:var(--muted); font-weight:600; }
+      /* ── Hébergement : moteur de recherche express ── */
+      .lg-search-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin:4px 0 12px; }
+      .lg-search-grid label { display:block; font-size:.72rem; color:var(--muted); margin-bottom:5px; text-transform:none; letter-spacing:0; }
+      .lg-search-grid select, .lg-search-grid input { width:100%; }
+      .lg-chips { display:flex; flex-wrap:wrap; gap:8px; margin:2px 0 13px; }
+      .lg-chip { display:inline-flex; align-items:center; gap:6px; padding:7px 13px; border-radius:20px; border:1px solid var(--border); background:var(--bg); color:var(--muted); font-size:.8rem; font-weight:600; cursor:pointer; transition:all .15s; user-select:none; }
+      .lg-chip:hover { border-color:var(--accent); color:var(--text); }
+      .lg-chip.on { background:linear-gradient(135deg, rgba(139,92,246,0.22), rgba(99,102,241,0.14)); border-color:rgba(139,92,246,0.6); color:#ddd6fe; }
+      .lg-search-summary { font-size:.82rem; color:var(--text); background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:10px; padding:10px 13px; margin-bottom:13px; line-height:1.55; }
+      .lg-search-links { display:flex; flex-wrap:wrap; gap:8px; }
+      .lg-search-links .btn { text-decoration:none; font-size:.82rem; padding:8px 14px; }
+      .lg-find { font-size:.76rem !important; padding:6px 11px !important; text-decoration:none; }
       /* ── Scènes illustrées (SVG inline · 100% hors-ligne) ─ */
       .hero { position:relative; border-radius:var(--radius); overflow:hidden; margin-bottom:16px; border:1px solid var(--border); box-shadow:var(--shadow); }
       .hero svg { display:block; width:100%; height:auto; }
@@ -1345,6 +1357,7 @@
         <div id="lodging-empty" class="empty"><span class="ic">🏨</span><p>Préparation de ton plan…</p><button class="btn btn-primary" onclick="genPlanNow(event)" style="margin-top:8px">⚡ Générer maintenant</button></div>
         <div id="lodging-content" style="display:none">
           <div class="card lodging-hero" id="lodging-hero"></div>
+          <div class="card lodging-search" id="lodging-search"></div>
           <div class="card">
             <h2>🛏️ Planifie tes nuits, étape par étape</h2>
             <p class="hint">Règle ton <strong>niveau de confort</strong> et le nombre de nuits par ville : le budget bouge <strong>en direct</strong>. Prix réels, bon quartier moto, liens de réservation pré-remplis.</p>
@@ -3029,6 +3042,16 @@
         };
         rows.forEach(r => { _lodge.nights[r.wp.name] = r.nights; });
 
+        // Restaure les préférences du moteur de recherche (ville, dates, filtres)
+        if (saved.search && typeof saved.search === 'object') {
+          _lodgeSearch = {
+            cityIdx: saved.search.cityIdx,
+            guests:  saved.search.guests || 2,
+            start:   saved.search.start  || new Date().toISOString().slice(0,10),
+            filters: Object.assign({ park:true, cancel:true, bkf:false, rated:false }, saved.search.filters || {})
+          };
+        }
+
         // ── Hero : simulateur de budget « nuits » en direct ──
         document.getElementById('lodging-hero').innerHTML = `
           <div class="lg-hero-top">
@@ -3076,7 +3099,7 @@
                 </div>
                 <p class="lodging-area">📍 ${info.area}</p>
                 <div class="lodging-links">
-                  <a class="btn btn-primary" href="${bookingUrl(info.book)}" target="_blank" rel="noopener">🏨 Booking</a>
+                  <button type="button" class="btn btn-primary lg-find" data-i="${idx}">🔎 Recherche auto</button>
                   <a class="btn btn-secondary" href="${gmapsHotelUrl(wp)}" target="_blank" rel="noopener">🗺️ Parking moto</a>
                   <a class="btn btn-secondary" href="${airbnbUrl(wp.name)}" target="_blank" rel="noopener">🏠 Airbnb</a>
                 </div>
@@ -3088,6 +3111,11 @@
         const slider = document.getElementById('lg-comfort');
         slider.oninput = () => { _lodge.comfort = (+slider.value) / 100; recalcLodging(); };
         document.getElementById('lodging-stages').onclick = e => {
+          const find = e.target.closest('.lg-find');
+          if (find) {
+            focusLodgeSearch(+find.dataset.i);
+            return;
+          }
           const b = e.target.closest('.lg-step'); if (!b) return;
           const r = _lodge.rows.find(x => x.idx === +b.dataset.i); if (!r) return;
           const n = Math.max(0, Math.min(5, (_lodge.nights[r.wp.name]||0) + (+b.dataset.d)));
@@ -3104,6 +3132,7 @@
           recalcLodging();
           showToast('Planning des nuits remis à zéro.', { icon:'🔄', type:'success' });
         };
+        buildLodgeSearch();
         recalcLodging();
 
         // Réflexes concrets de réservation
@@ -3120,6 +3149,7 @@
 
       // ── Planificateur d'hébergement : état + recalcul en direct ────
       let _lodge = null;
+      let _lodgeSearch = null;
       // « 60–90 € » → { min:60, max:90 } (gère tiret, demi-cadratin, cadratin).
       function parseLodgePrice(str){
         if (!str) return null;
@@ -3131,7 +3161,13 @@
       function lodgeLevel(c){ return c < 0.34 ? {e:'🛏️',t:'Routard'} : c < 0.67 ? {e:'🏨',t:'Confort'} : {e:'✨',t:'Premium'}; }
       function saveLodge(){
         if (!_lodge) return;
-        try { localStorage.setItem('roadtrip_lodging', JSON.stringify({ comfort:_lodge.comfort, nights:_lodge.nights })); } catch(e){}
+        try {
+          localStorage.setItem('roadtrip_lodging', JSON.stringify({
+            comfort: _lodge.comfort,
+            nights:  _lodge.nights,
+            search:  _lodgeSearch ? { cityIdx:_lodgeSearch.cityIdx, guests:_lodgeSearch.guests, start:_lodgeSearch.start, filters:_lodgeSearch.filters } : undefined
+          }));
+        } catch(e){}
       }
       function recalcLodging(){
         if (!_lodge) return;
@@ -3171,6 +3207,120 @@
           else if (diff > 0){ dEl.textContent = '📈 +' + Math.round(diff).toLocaleString('fr-FR') + ' € vs estimation du plan (' + Math.round(base).toLocaleString('fr-FR') + ' €)'; dEl.style.color = '#f59e0b'; }
           else { dEl.textContent = '📉 −' + Math.round(-diff).toLocaleString('fr-FR') + ' € vs estimation du plan · beau geste 👌'; dEl.style.color = 'var(--success)'; }
         }
+        if (document.getElementById('lg-q-city')) updateLodgeSearch();
+        saveLodge();
+      }
+
+      // ── Moteur de recherche express (deep-links auto Booking/Airbnb/Google) ──
+      function lgDateStr(d){ const p = n => String(n).padStart(2,'0'); return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate()); }
+      function lgAddDays(d, n){ const x = new Date(d.getTime()); x.setDate(x.getDate() + n); return x; }
+      // Booking : ville + dates + voyageurs + budget max + filtres (parking/annulation/petit-déj/note).
+      function bookingSearchUrl(city, ci, co, guests, priceMax, f){
+        let u = 'https://www.booking.com/searchresults.html?ss=' + encodeURIComponent(city);
+        if (ci && co) u += '&checkin=' + ci + '&checkout=' + co;
+        u += '&group_adults=' + guests + '&no_rooms=1&group_children=0';
+        const nflt = [];
+        if (priceMax) nflt.push('price=EUR-0-' + priceMax + '-1');
+        if (f.park)   nflt.push('hotelfacility=2');    // parking
+        if (f.cancel) nflt.push('fc=2');               // annulation gratuite
+        if (f.bkf)    nflt.push('mealplan=1');         // petit-déjeuner inclus
+        if (f.rated)  nflt.push('review_score=80');    // note ≥ 8
+        if (nflt.length) u += '&nflt=' + encodeURIComponent(nflt.join(';'));
+        return u;
+      }
+      function airbnbSearchUrl(city, ci, co, guests, priceMax){
+        const q = ['adults=' + guests];
+        if (ci) q.push('checkin=' + ci);
+        if (co) q.push('checkout=' + co);
+        if (priceMax) q.push('price_max=' + priceMax);
+        return 'https://www.airbnb.fr/s/' + encodeURIComponent(city) + '/homes?' + q.join('&');
+      }
+      function googleHotelUrl(city){ return 'https://www.google.com/travel/search?q=' + encodeURIComponent('hôtels ' + city); }
+
+      // Depuis une carte-étape : cible cette ville dans le moteur et défile jusqu'à lui.
+      function focusLodgeSearch(idx){
+        if (!_lodgeSearch) return;
+        _lodgeSearch.cityIdx = idx;
+        const sel = document.getElementById('lg-q-city'); if (sel) sel.value = String(idx);
+        updateLodgeSearch();
+        const host = document.getElementById('lodging-search');
+        if (host) host.scrollIntoView({ behavior:'smooth', block:'start' });
+      }
+
+      // Construit la carte « moteur de recherche » (sélecteur de ville + options).
+      function buildLodgeSearch(){
+        const host = document.getElementById('lodging-search');
+        if (!host || !_lodge) return;
+        const rows = _lodge.rows;
+        const firstNight = rows.find(r => (_lodge.nights[r.wp.name]||0) > 0) || rows[0];
+        if (!_lodgeSearch) _lodgeSearch = { cityIdx:firstNight.idx, guests:2, start:new Date().toISOString().slice(0,10), filters:{ park:true, cancel:true, bkf:false, rated:false } };
+        if (!rows.some(r => r.idx === _lodgeSearch.cityIdx)) _lodgeSearch.cityIdx = firstNight.idx;
+        const opts = rows.map(r => '<option value="' + r.idx + '">' + r.wp.flag + ' ' + r.wp.name + '</option>').join('');
+        host.innerHTML =
+            '<h2>🔎 Recherche express d\'hébergement</h2>'
+          + '<p class="hint">Choisis une <strong>ville-étape</strong> : les dates, le budget et les filtres moto se pré-remplissent tout seuls sur Booking, Airbnb & Google.</p>'
+          + '<div class="lg-search-grid">'
+          +   '<div><label>📍 Ville-étape</label><select id="lg-q-city">' + opts + '</select></div>'
+          +   '<div><label>📅 Départ du road trip</label><input type="date" id="lg-q-start" value="' + _lodgeSearch.start + '"></div>'
+          +   '<div><label>👥 Voyageurs</label><input type="number" id="lg-q-guests" min="1" max="6" value="' + _lodgeSearch.guests + '"></div>'
+          + '</div>'
+          + '<div class="lg-chips" id="lg-q-filters">'
+          +   '<span class="lg-chip" data-f="park">🅿️ Parking moto</span>'
+          +   '<span class="lg-chip" data-f="cancel">🔓 Annulation gratuite</span>'
+          +   '<span class="lg-chip" data-f="bkf">🍳 Petit-déj</span>'
+          +   '<span class="lg-chip" data-f="rated">⭐ Note ≥ 8</span>'
+          + '</div>'
+          + '<div class="lg-search-summary" id="lg-q-summary">—</div>'
+          + '<div class="lg-search-links" id="lg-q-links"></div>';
+        const sel = document.getElementById('lg-q-city');
+        sel.value = String(_lodgeSearch.cityIdx);
+        sel.onchange = () => { _lodgeSearch.cityIdx = +sel.value; updateLodgeSearch(); };
+        document.getElementById('lg-q-start').onchange  = e => { _lodgeSearch.start = e.target.value; updateLodgeSearch(); };
+        document.getElementById('lg-q-guests').oninput  = e => { _lodgeSearch.guests = Math.max(1, Math.min(6, +e.target.value || 1)); updateLodgeSearch(); };
+        document.getElementById('lg-q-filters').onclick = e => {
+          const c = e.target.closest('.lg-chip'); if (!c) return;
+          _lodgeSearch.filters[c.dataset.f] = !_lodgeSearch.filters[c.dataset.f];
+          updateLodgeSearch();
+        };
+        updateLodgeSearch();
+      }
+
+      // Recalcule dates auto (départ + nuits des villes précédentes), budget et deep-links.
+      function updateLodgeSearch(){
+        if (!_lodge || !_lodgeSearch) return;
+        const sel = document.getElementById('lg-q-city'); if (!sel) return;
+        const row = _lodge.rows.find(r => r.idx === _lodgeSearch.cityIdx) || _lodge.rows[0];
+        if (!row) return;
+        document.querySelectorAll('#lg-q-filters .lg-chip').forEach(c => c.classList.toggle('on', !!_lodgeSearch.filters[c.dataset.f]));
+        // Arrivée = départ du trip + total des nuits réservées AVANT cette ville.
+        let before = 0;
+        for (const r of _lodge.rows){ if (r.idx < row.idx) before += _lodge.nights[r.wp.name] || 0; }
+        const startD  = new Date(_lodgeSearch.start + 'T00:00:00');
+        const okStart = !isNaN(startD.getTime());
+        const nights  = Math.max(1, _lodge.nights[row.wp.name] || 1);
+        const ci  = okStart ? lgAddDays(startD, before) : null;
+        const co  = ci ? lgAddDays(ci, nights) : null;
+        const ciS = ci ? lgDateStr(ci) : '';
+        const coS = co ? lgDateStr(co) : '';
+        // Budget max/nuit = prix confort de la ville + 15 % de marge.
+        const price = row.range ? Math.round(row.range.min + (row.range.max - row.range.min) * _lodge.comfort) : null;
+        const budgetMax = price ? Math.round(price * 1.15) : null;
+        const g = _lodgeSearch.guests, f = _lodgeSearch.filters, wp = row.wp;
+        const fmt = d => d ? d.toLocaleDateString('fr-FR', { weekday:'short', day:'numeric', month:'short' }) : '—';
+        const chips = [];
+        if (f.park) chips.push('🅿️'); if (f.cancel) chips.push('🔓'); if (f.bkf) chips.push('🍳'); if (f.rated) chips.push('⭐');
+        const sumEl = document.getElementById('lg-q-summary');
+        if (sumEl) sumEl.innerHTML =
+            '<strong>' + wp.flag + ' ' + wp.name + '</strong> · 📅 ' + fmt(ci) + ' → ' + fmt(co)
+          + ' <span style="color:var(--muted)">(' + nights + ' nuit' + (nights>1?'s':'') + ')</span> · 👥 ' + g
+          + (budgetMax ? ' · 💶 ≤ ' + budgetMax + ' €/nuit' : '')
+          + (chips.length ? ' · ' + chips.join(' ') : '');
+        const linksEl = document.getElementById('lg-q-links');
+        if (linksEl) linksEl.innerHTML =
+            '<a class="btn btn-primary" href="' + bookingSearchUrl(row.info.book, ciS, coS, g, budgetMax, f) + '" target="_blank" rel="noopener">🏨 Booking</a>'
+          + '<a class="btn btn-secondary" href="' + airbnbSearchUrl(wp.name, ciS, coS, g, budgetMax) + '" target="_blank" rel="noopener">🏠 Airbnb</a>'
+          + '<a class="btn btn-secondary" href="' + googleHotelUrl(row.info.book) + '" target="_blank" rel="noopener">🔎 Google Hôtels</a>'
+          + '<a class="btn btn-secondary" href="' + gmapsHotelUrl(wp) + '" target="_blank" rel="noopener">🗺️ Parking moto</a>';
         saveLodge();
       }
 
