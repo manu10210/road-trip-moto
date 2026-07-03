@@ -1,4 +1,4 @@
-const CACHE = 'roadtrip-v54';
+const CACHE = 'roadtrip-v55';
 const STATIC = ['/', '/index.html', '/icon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png', '/manifest.json'];
 
 self.addEventListener('install', e => {
