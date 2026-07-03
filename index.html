@@ -215,8 +215,6 @@
       .cb-extra { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
       .cb-chip { font-size:.72rem; background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:4px 9px; color:var(--muted); }
       .cb-chip b { color:var(--text); font-weight:700; }
-      .ride-save-row { max-width:430px; width:100%; align-self:center; margin-top:10px; }
-      .ride-save-row .btn { width:100%; padding:12px; font-size:.9rem; }
       /* ── Diary : timeline d'étapes (réutilise .stage-wrap/.stage-dot) ─ */
       .de-timeline .stage-wrap { padding-left:40px; margin-bottom:14px; }
       .de-timeline .stage-dot { border:none; color:#fff; font-size:.78rem; }
@@ -578,44 +576,66 @@
       .fuel-cheap .fc-txt b { color:#86efac; }
       .fuel-cheap .fc-price { font-size:1.35rem; font-weight:800; color:#86efac; font-variant-numeric:tabular-nums; white-space:nowrap; text-align:center; line-height:1.1; }
       .fuel-cheap .fc-price small { display:block; font-size:.6rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
-      /* ── Mode Pilote (ordinateur de bord GPS) ───────────── */
-      #ride-overlay { display:none; position:fixed; inset:0; z-index:500; background:radial-gradient(ellipse at 50% -10%, #26221a 0%, #030303 72%); color:var(--text); flex-direction:column; padding:16px; overflow-y:auto; }
+      /* ── Mode Pilote (HUD guidon : lisible en un coup d'œil, gants OK) ─ */
+      #ride-overlay { display:none; position:fixed; inset:0; z-index:500; background:#050505; color:var(--text); flex-direction:column; padding:calc(12px + env(safe-area-inset-top)) 18px calc(12px + env(safe-area-inset-bottom)); overflow-y:auto; user-select:none; }
       #ride-overlay.open { display:flex; animation:fadeIn .25s ease; }
-      .ride-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
-      .ride-top h2 { font-size:1rem; color:var(--accent); display:flex; align-items:center; gap:7px; letter-spacing:.06em; font-weight:700; }
-      .ride-badge { font-size:.66rem; padding:4px 10px; border-radius:20px; font-weight:700; letter-spacing:.05em; white-space:nowrap; }
+      .ride-top { display:flex; align-items:center; gap:10px; margin-bottom:2px; }
+      .ride-clock { margin-left:auto; font-size:1.15rem; font-weight:800; font-variant-numeric:tabular-nums; color:var(--text); letter-spacing:.03em; }
+      .ride-badge { font-size:.68rem; padding:5px 12px; border-radius:20px; font-weight:800; letter-spacing:.05em; white-space:nowrap; }
       .ride-badge.live { background:rgba(34,197,94,0.16); color:#86efac; border:1px solid rgba(34,197,94,0.45); animation:livePulse 1.5s infinite; }
       .ride-badge.idle { background:rgba(148,163,184,0.12); color:var(--muted); border:1px solid var(--border); }
       @keyframes livePulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-      .speedo-wrap { display:flex; justify-content:center; margin:2px 0; }
-      .speedo { width:100%; max-width:330px; }
-      .speedo-arc-bg { fill:none; stroke:var(--bg3); stroke-width:14; stroke-linecap:round; }
-      .speedo-arc { fill:none; stroke:url(#speedGrad); stroke-width:14; stroke-linecap:round; transition:stroke-dashoffset .4s ease; filter:drop-shadow(0 0 8px rgba(245,158,11,0.5)); }
-      .speedo-needle { stroke:var(--accent); stroke-width:3.5; stroke-linecap:round; transition:transform .35s cubic-bezier(.34,1.56,.64,1); filter:drop-shadow(0 0 4px rgba(245,158,11,0.7)); }
-      .speedo-hub { fill:var(--accent); }
-      .speedo-val { font-size:3.6rem; font-weight:800; fill:#fff; text-anchor:middle; font-variant-numeric:tabular-nums; }
-      .speedo-unit { font-size:.8rem; fill:var(--muted); text-anchor:middle; letter-spacing:.2em; }
-      .ride-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; margin:8px 0; max-width:430px; width:100%; align-self:center; }
-      .ride-cell { background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:13px 6px; text-align:center; }
-      .ride-cell .v { font-size:1.5rem; font-weight:800; color:var(--accent); line-height:1; font-variant-numeric:tabular-nums; }
-      .ride-cell .l { font-size:.62rem; color:var(--muted); margin-top:6px; text-transform:uppercase; letter-spacing:.05em; }
-      .ride-gps { text-align:center; font-size:.8rem; color:var(--muted); font-variant-numeric:tabular-nums; margin:4px 0 10px; }
+      .ride-quit { flex:none; width:42px; height:42px; border-radius:12px; background:var(--bg3); border:1px solid var(--border); color:var(--muted); font-size:1.05rem; cursor:pointer; display:grid; place-items:center; font-family:inherit; }
+      .ride-quit:active { background:var(--bg2); }
+      /* Vitesse géante : un nombre se lit plus vite qu'une aiguille */
+      .ride-speed { text-align:center; margin:4px 0 2px; }
+      .ride-speed .rs-val { font-size:clamp(5.4rem, 31vw, 10.5rem); font-weight:800; line-height:.95; color:#fff; font-variant-numeric:tabular-nums; letter-spacing:-.04em; text-shadow:0 0 34px rgba(245,158,11,0.18); }
+      .ride-speed .rs-unit { font-size:.78rem; letter-spacing:.42em; color:var(--muted); font-weight:800; margin-top:4px; text-indent:.42em; }
+      .ride-speedbar { max-width:430px; width:min(430px, 86%); height:9px; border-radius:20px; background:var(--bg3); overflow:hidden; margin:14px auto 2px; }
+      .ride-speedbar .rsb-fill { height:100%; width:0%; border-radius:20px; background:linear-gradient(90deg,#22c55e,#f59e0b 55%,#ef4444); transition:width .35s ease; }
+      /* Deux cellules primaires : durée + distance, très grandes */
+      .ride-primary { display:grid; grid-template-columns:1fr 1fr; gap:10px; max-width:430px; width:100%; align-self:center; margin:12px 0 9px; }
+      .ride-pcell { background:var(--bg2); border:1px solid var(--border); border-radius:16px; padding:15px 8px 13px; text-align:center; }
+      .ride-pcell .v { font-size:2.05rem; font-weight:800; color:var(--accent); line-height:1; font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
+      .ride-pcell .l { font-size:.62rem; color:var(--muted); margin-top:8px; text-transform:uppercase; letter-spacing:.09em; font-weight:800; }
+      /* Chips secondaires : cap, altitude, max, moyenne */
+      .ride-chips { display:flex; flex-wrap:wrap; gap:7px; justify-content:center; max-width:430px; width:100%; align-self:center; margin-bottom:9px; }
+      .ride-chip { display:inline-flex; align-items:center; gap:6px; background:var(--bg2); border:1px solid var(--border); border-radius:20px; padding:8px 14px; font-size:.86rem; color:var(--muted); font-weight:600; }
+      .ride-chip b { color:var(--text); font-variant-numeric:tabular-nums; font-weight:800; font-size:.95rem; }
+      .ride-chip small { font-size:.66rem; color:var(--muted); font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+      .ride-gps { text-align:center; font-size:.74rem; color:var(--muted); font-variant-numeric:tabular-nums; margin:8px 0 2px; }
       .ride-gps.weak { color:#fca5a5; }
-      .ride-border { max-width:430px; width:100%; align-self:center; text-align:center; font-size:.82rem; font-weight:700; padding:9px 14px; border-radius:var(--radius-sm); margin:0 0 10px; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.35); color:var(--accent); display:none; }
+      .ride-border { max-width:430px; width:100%; align-self:center; text-align:center; font-size:.95rem; font-weight:800; padding:13px 16px; border-radius:14px; margin:0 0 9px; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.4); color:var(--accent); display:none; }
       .ride-border.show { display:block; }
-      .ride-border.done { background:rgba(34,197,94,0.12); border-color:rgba(34,197,94,0.35); color:#86efac; }
-      .ride-controls { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; max-width:430px; width:100%; align-self:center; margin-top:auto; padding-bottom:4px; }
-      .ride-controls .btn { flex:1; min-width:130px; padding:13px; font-size:.95rem; }
+      .ride-border.done { background:rgba(34,197,94,0.12); border-color:rgba(34,197,94,0.4); color:#86efac; }
+      /* Contrôles : gros bouton unique « gants OK » + actions secondaires */
+      .ride-controls { display:flex; flex-direction:column; gap:9px; max-width:430px; width:100%; align-self:center; margin-top:auto; padding-bottom:2px; }
+      .ride-go { width:100%; padding:19px; font-size:1.18rem; font-weight:800; letter-spacing:.01em; border-radius:18px; border:none; cursor:pointer; font-family:inherit; background:var(--accent); color:#1a0e02; box-shadow:0 6px 26px rgba(245,158,11,.3); transition:transform .12s, background .18s, box-shadow .18s; }
+      .ride-go:active { transform:scale(.97); }
+      .ride-go.running { background:rgba(239,68,68,.15); color:#fca5a5; border:1.5px solid rgba(239,68,68,.55); box-shadow:none; }
+      .ride-sub { display:flex; gap:9px; }
+      .ride-sub .btn { flex:1; padding:13px 8px; font-size:.84rem; }
+      .ride-sub .ride-save { background:rgba(34,197,94,0.13); border:1px solid rgba(34,197,94,0.4); color:#86efac; }
       /* Rappel pause nuque (Mode Pilote) — relié au profil cervical C3–C4 */
-      .ride-pause { max-width:430px; width:100%; align-self:center; display:flex; align-items:center; gap:11px; background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius); padding:11px 14px; margin:0 0 10px; font-size:.82rem; }
-      .ride-pause .rp-ic { font-size:1.3rem; flex:none; }
+      .ride-pause { max-width:430px; width:100%; align-self:center; display:flex; align-items:center; gap:11px; background:var(--bg2); border:1px solid var(--border); border-radius:14px; padding:12px 15px; margin:0 0 9px; font-size:.88rem; }
+      .ride-pause .rp-ic { font-size:1.45rem; flex:none; }
       .ride-pause .rp-txt { flex:1; min-width:0; line-height:1.35; }
       .ride-pause .rp-txt b { color:var(--accent); font-variant-numeric:tabular-nums; }
       .ride-pause.due { background:rgba(245,158,11,0.14); border-color:rgba(245,158,11,0.5); animation:pausePulse 1.4s infinite; }
       .ride-pause.due .rp-ic { color:#f59e0b; }
-      .ride-pause .rp-done { flex:none; background:rgba(34,197,94,0.16); border:1px solid rgba(34,197,94,0.4); color:#86efac; border-radius:20px; padding:5px 11px; font-size:.72rem; font-weight:700; cursor:pointer; font-family:inherit; white-space:nowrap; }
+      .ride-pause .rp-done { flex:none; background:rgba(34,197,94,0.16); border:1px solid rgba(34,197,94,0.4); color:#86efac; border-radius:20px; padding:8px 13px; font-size:.76rem; font-weight:800; cursor:pointer; font-family:inherit; white-space:nowrap; }
       @keyframes pausePulse { 0%,100%{ box-shadow:0 0 0 0 rgba(245,158,11,0.4);} 50%{ box-shadow:0 0 0 6px rgba(245,158,11,0);} }
       @media (prefers-reduced-motion:reduce){ .ride-pause.due{ animation:none; } }
+      /* Paysage (téléphone couché sur support guidon) : vitesse à gauche, données à droite */
+      @media (orientation:landscape) and (max-height:620px){
+        #ride-overlay.open { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:auto 1fr; column-gap:22px; align-items:start; }
+        .ride-top { grid-column:1 / -1; grid-row:1; }
+        .ride-speed { grid-column:1; grid-row:2; align-self:center; position:sticky; top:8px; }
+        .ride-speed .rs-val { font-size:clamp(5rem, 17vw, 9rem); }
+        .ride-primary, .ride-chips, .ride-pause, .ride-border, .ride-controls, .ride-gps { grid-column:2; max-width:none; }
+        .ride-primary { margin-top:0; }
+        .ride-controls { margin-top:6px; }
+      }
       /* « Ta journée type » — découpage conduite / pauses selon le profil pilote */
       .pjour-bar { display:flex; height:36px; border-radius:10px; overflow:hidden; border:1px solid var(--border); }
       .pjour-seg { display:flex; align-items:center; justify-content:center; font-size:.82rem; min-width:12px; }
@@ -2367,34 +2387,25 @@
     <!-- Mode Pilote -->
     <div id="ride-overlay">
       <div class="ride-top">
-        <h2>🛰️ MODE PILOTE</h2>
-        <span style="display:flex;gap:8px;align-items:center">
-          <span class="ride-badge idle" id="ride-status">● GPS OFF</span>
-          <button class="btn btn-secondary" onclick="closeRide()" style="padding:6px 13px">✕ Quitter</button>
-        </span>
+        <span class="ride-badge idle" id="ride-status">● GPS OFF</span>
+        <span class="ride-clock" id="ride-clock">--:--</span>
+        <button class="ride-quit" onclick="closeRide()" aria-label="Quitter le Mode Pilote">✕</button>
       </div>
-      <div class="speedo-wrap">
-        <svg class="speedo" viewBox="0 0 200 178">
-          <defs><linearGradient id="speedGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-            <stop offset="0%" stop-color="#22c55e"/><stop offset="55%" stop-color="#f59e0b"/><stop offset="100%" stop-color="#ef4444"/>
-          </linearGradient></defs>
-          <path class="speedo-arc-bg" d="M 43.43 156.57 A 80 80 0 1 1 156.57 156.57"/>
-          <path class="speedo-arc" id="speedo-arc" d="M 43.43 156.57 A 80 80 0 1 1 156.57 156.57"/>
-          <line class="speedo-needle" id="speedo-needle" x1="100" y1="100" x2="100" y2="34"/>
-          <circle class="speedo-hub" cx="100" cy="100" r="6"/>
-          <text class="speedo-val" id="speedo-val" x="100" y="94">0</text>
-          <text class="speedo-unit" x="100" y="116">KM/H</text>
-        </svg>
+      <div class="ride-speed">
+        <div class="rs-val" id="speedo-val">0</div>
+        <div class="rs-unit">KM/H</div>
+        <div class="ride-speedbar"><div class="rsb-fill" id="speedo-bar"></div></div>
       </div>
-      <div class="ride-grid">
-        <div class="ride-cell"><div class="v" id="ride-heading">—</div><div class="l">🧭 Cap</div></div>
-        <div class="ride-cell"><div class="v" id="ride-alt">—</div><div class="l">⛰️ Altitude</div></div>
-        <div class="ride-cell"><div class="v" id="ride-time">0:00</div><div class="l">⏱️ Durée</div></div>
-        <div class="ride-cell"><div class="v" id="ride-dist">0.0</div><div class="l">📏 Distance km</div></div>
-        <div class="ride-cell"><div class="v" id="ride-max">0</div><div class="l">🚀 Max km/h</div></div>
-        <div class="ride-cell"><div class="v" id="ride-avg">0</div><div class="l">📊 Moy km/h</div></div>
+      <div class="ride-primary">
+        <div class="ride-pcell"><div class="v" id="ride-time">0:00</div><div class="l">⏱️ Durée</div></div>
+        <div class="ride-pcell"><div class="v" id="ride-dist">0.0</div><div class="l">📏 Distance km</div></div>
       </div>
-      <div class="ride-gps" id="ride-gps">📍 En attente du signal GPS…</div>
+      <div class="ride-chips">
+        <span class="ride-chip">🧭 <b id="ride-heading">—</b></span>
+        <span class="ride-chip">⛰️ <b id="ride-alt">—</b></span>
+        <span class="ride-chip">🚀 <b id="ride-max">0</b> <small>max</small></span>
+        <span class="ride-chip">📊 <b id="ride-avg">0</b> <small>moy</small></span>
+      </div>
       <div class="ride-pause" id="ride-pause" style="display:none">
         <span class="rp-ic" id="rp-ic">🦴</span>
         <span class="rp-txt" id="rp-txt">Prochaine pause nuque dans <b>—</b></span>
@@ -2402,13 +2413,13 @@
       </div>
       <div class="ride-border" id="ride-border"></div>
       <div class="ride-controls">
-        <button class="btn btn-primary" id="ride-start" onclick="toggleRide()">▶️ Démarrer</button>
-        <button class="btn btn-secondary" onclick="resetRide()">🔄 Réinitialiser</button>
+        <button class="ride-go" id="ride-start" onclick="toggleRide()">▶️ Démarrer la session</button>
+        <div class="ride-sub">
+          <button class="btn btn-secondary" onclick="resetRide()">🔄 Réinitialiser</button>
+          <button class="btn ride-save" onclick="saveRideStage()">📔 Enregistrer l'étape</button>
+        </div>
       </div>
-      <div class="ride-save-row">
-        <button class="btn btn-secondary" onclick="saveRideStage()" style="background:rgba(34,197,94,0.14);border-color:rgba(34,197,94,0.4);color:#86efac">📔 Enregistrer cette étape au carnet de bord</button>
-      </div>
-      <div style="text-align:center;font-size:0.72rem;color:var(--muted);margin-top:6px">👉 La session (km, vitesses, durée) se range dans l'onglet <strong>📔 Carnet</strong>.</div>
+      <div class="ride-gps" id="ride-gps">� En attente du signal GPS…</div>
     </div>
 
     <!-- SOS bouton flottant -->
@@ -9088,12 +9099,26 @@
 
       // ── Mode Pilote (ordinateur de bord GPS) ──────────────────────
       const ride = { watch:null, timer:null, running:false, dist:0, max:0, last:null, lastT:0, t0:0, elapsed:0, speeds:[], wake:null, pauseAnchor:0, pauseAlerted:false };
-      const ARC_LEN = 376.99, MAX_KMH = 180;
+      const MAX_KMH = 180;
       const CARDINAL = ['N','NE','E','SE','S','SO','O','NO'];
 
+      let _rideClock = null;
+      function updateRideClock(){
+        const el = document.getElementById('ride-clock');
+        if (el) el.textContent = new Date().toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+      }
       document.getElementById('rideBtn').addEventListener('click', openRide);
-      function openRide(){ document.getElementById('ride-overlay').classList.add('open'); renderRidePause(); }
-      function closeRide(){ stopRide(); document.getElementById('ride-overlay').classList.remove('open'); }
+      function openRide(){
+        document.getElementById('ride-overlay').classList.add('open');
+        renderRidePause();
+        updateRideClock();
+        if (!_rideClock) _rideClock = setInterval(updateRideClock, 10000);
+      }
+      function closeRide(){
+        stopRide();
+        document.getElementById('ride-overlay').classList.remove('open');
+        if (_rideClock){ clearInterval(_rideClock); _rideClock = null; }
+      }
       window.openRide = openRide; window.closeRide = closeRide;
 
       // ── Rappel pause nuque (relié au profil pilote C3–C4) ──────────
@@ -9191,7 +9216,8 @@
       async function startRide(){
         if (!navigator.geolocation){ showToast('GPS non disponible sur cet appareil.', { type:'danger', icon:'🚫' }); return; }
         ride.running = true; ride.t0 = Date.now() - ride.elapsed;
-        document.getElementById('ride-start').innerHTML = '⏸️ Pause';
+        const b = document.getElementById('ride-start');
+        b.innerHTML = '⏸️ Mettre en pause'; b.classList.add('running');
         setRideStatus('live','● EN DIRECT');
         try { if ('wakeLock' in navigator) ride.wake = await navigator.wakeLock.request('screen'); } catch(e){}
         ride.timer = setInterval(updateRideTime, 1000);
@@ -9204,7 +9230,8 @@
         if (ride.timer){ clearInterval(ride.timer); ride.timer=null; }
         if (ride.t0) ride.elapsed = Date.now() - ride.t0;
         if (ride.wake){ ride.wake.release().catch(()=>{}); ride.wake=null; }
-        document.getElementById('ride-start').innerHTML = '▶️ Reprendre';
+        const b = document.getElementById('ride-start');
+        b.innerHTML = '▶️ Reprendre'; b.classList.remove('running');
         setRideStatus('idle','● EN PAUSE');
       }
       function resetRide(){
@@ -9217,7 +9244,8 @@
         document.getElementById('ride-time').textContent='0:00';
         document.getElementById('ride-heading').textContent='—';
         document.getElementById('ride-alt').textContent='—';
-        document.getElementById('ride-start').innerHTML='▶️ Démarrer';
+        const b = document.getElementById('ride-start');
+        b.innerHTML='▶️ Démarrer la session'; b.classList.remove('running');
         setRideStatus('idle','● GPS OFF');
         const g=document.getElementById('ride-gps'); g.className='ride-gps'; g.textContent='📍 En attente du signal GPS…';
         try { renderRideBorder(null); } catch(e){}
@@ -9320,10 +9348,9 @@
       function drawSpeed(kmh){
         const v = Math.max(0, Math.min(kmh, MAX_KMH));
         document.getElementById('speedo-val').textContent = Math.round(Math.max(0,kmh));
-        document.getElementById('speedo-arc').style.strokeDashoffset = (ARC_LEN*(1 - v/MAX_KMH)).toFixed(1);
-        document.getElementById('speedo-needle').setAttribute('transform', `rotate(${225 + 270*(v/MAX_KMH)} 100 100)`);
+        const bar = document.getElementById('speedo-bar');
+        if (bar) bar.style.width = (v / MAX_KMH * 100).toFixed(1) + '%';
       }
-      (function(){ const a=document.getElementById('speedo-arc'); if(a){ a.style.strokeDasharray=ARC_LEN.toFixed(1); a.style.strokeDashoffset=ARC_LEN.toFixed(1);} })();
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState==='visible' && ride.running && 'wakeLock' in navigator && !ride.wake) {
           navigator.wakeLock.request('screen').then(w => ride.wake=w).catch(()=>{});
