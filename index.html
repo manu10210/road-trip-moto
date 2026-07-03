@@ -121,6 +121,26 @@
       .nav-mode { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 5px; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.3); color: var(--accent); padding: 7px 12px; border-radius: 20px; cursor: pointer; font-size: .78rem; font-weight: 700; font-family: inherit; white-space: nowrap; transition: border-color .15s, background .15s; }
       .nav-mode:hover { border-color: rgba(245,158,11,0.55); background: rgba(245,158,11,0.16); }
       .nav-search kbd { background: var(--bg3); border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; font-size: .68rem; font-family: inherit; }
+      /* Étiquettes de groupe : cachées sur mobile, visibles dans la barre latérale */
+      .nav-grp { display: none; }
+      /* ── Barre latérale (ordinateur ≥1024px) ───────────────
+         La navigation quitte le bandeau horizontal pour une vraie
+         colonne latérale groupée — plus claire, plus scannable. */
+      @media (min-width: 1024px) {
+        .nav-wrap { position: fixed; top: var(--header-h, 56px); left: 0; bottom: 0; width: 240px; border-right: 1px solid var(--border); border-bottom: none; background: rgba(9,9,11,0.55); overflow-y: auto; scrollbar-width: thin; }
+        .subnav { flex-direction: column; align-items: stretch; gap: 2px; padding: 12px 12px 96px; max-width: none; margin: 0; }
+        .nav-grp { display: flex; align-items: center; gap: 7px; font-size: .63rem; font-weight: 800; text-transform: uppercase; letter-spacing: .11em; color: var(--muted); padding: 18px 10px 7px; }
+        .subtab { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; font-size: .88rem; text-align: left; }
+        .subtab::after { display: none; }
+        .subtab:hover { background: var(--bg3); }
+        .subtab.active { background: rgba(245,158,11,0.13); color: var(--accent); }
+        .subnav-right { order: -1; position: static; display: flex; flex-direction: column; align-items: stretch; background: none; padding: 0 0 12px; margin: 0; border-bottom: 1px solid var(--border); gap: 7px; }
+        html[data-theme="light"] .subnav-right { background: none; }
+        .nav-search { justify-content: flex-start; border-radius: 10px; padding: 9px 12px; }
+        .nav-search kbd { margin-left: auto; }
+        .nav-mode { justify-content: center; border-radius: 10px; padding: 9px 12px; }
+        .tab-content { margin-left: 240px; }
+      }
       /* ── Command palette ────────────────────────────────── */
       .cmdk-overlay { position: fixed; inset: 0; background: rgba(2,2,3,0.78); backdrop-filter: blur(4px); z-index: 600; display: none; align-items: flex-start; justify-content: center; padding-top: 12vh; }
       .cmdk-overlay.open { display: flex; }
@@ -836,6 +856,11 @@
       .prep-phase-label::after { content:''; flex:1; height:1px; background:var(--border); }
       .prep-setup { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
       @media (max-width:640px){ .prep-setup { grid-template-columns:1fr; } }
+      /* Duo compte à rebours + préparation intelligente : côte à côte sur grand écran */
+      @media (min-width: 980px){
+        .prep-duo { display:grid; grid-template-columns:repeat(auto-fit, minmax(390px, 1fr)); gap:22px; align-items:stretch; margin-bottom:22px; }
+        .prep-duo > .card { margin-bottom:0; }
+      }
       .prep-step { display:flex; flex-direction:column; border-top:3px solid var(--border-strong); }
       .prep-step.acc-teal { border-top-color:var(--accent2); }
       .prep-step.acc-violet { border-top-color:var(--violet); }
@@ -1415,26 +1440,28 @@
           </div>
         </div>
 
-        <!-- Compte à rebours animé + timeline du voyage -->
-        <div class="card countdown-card">
-          <div id="cd-display"></div>
-          <div id="cd-journey" class="cd-journey"></div>
-        </div>
-
-        <!-- Préparation intelligente : score de préparation + checklist + météo -->
-        <div class="card iq-card" id="iq-card" style="display:none">
-          <div class="iq-top">
-            <div class="iq-ring" id="iq-ring"></div>
-            <div class="iq-head">
-              <h2>🧠 Préparation intelligente</h2>
-              <div class="iq-brief" id="iq-brief"></div>
-              <button type="button" class="iq-cta" id="iq-cta" style="display:none"></button>
-            </div>
+        <!-- Compte à rebours + préparation intelligente : duo côte à côte sur grand écran -->
+        <div class="prep-duo">
+          <div class="card countdown-card">
+            <div id="cd-display"></div>
+            <div id="cd-journey" class="cd-journey"></div>
           </div>
-          <div class="iq-checks" id="iq-checks"></div>
-          <div class="iq-wx" id="iq-wx" style="display:none">
-            <div class="iq-wx-h">🌤️ Météo de ta fenêtre de départ · <span id="iq-wx-city"></span></div>
-            <div class="iq-wx-strip" id="iq-wx-strip"></div>
+
+          <!-- Préparation intelligente : score de préparation + checklist + météo -->
+          <div class="card iq-card" id="iq-card" style="display:none">
+            <div class="iq-top">
+              <div class="iq-ring" id="iq-ring"></div>
+              <div class="iq-head">
+                <h2>🧠 Préparation intelligente</h2>
+                <div class="iq-brief" id="iq-brief"></div>
+                <button type="button" class="iq-cta" id="iq-cta" style="display:none"></button>
+              </div>
+            </div>
+            <div class="iq-checks" id="iq-checks"></div>
+            <div class="iq-wx" id="iq-wx" style="display:none">
+              <div class="iq-wx-h">🌤️ Météo de ta fenêtre de départ · <span id="iq-wx-city"></span></div>
+              <div class="iq-wx-strip" id="iq-wx-strip"></div>
+            </div>
           </div>
         </div>
 
@@ -2536,16 +2563,10 @@
       let navMode = 'ess';
       try { const sm = localStorage.getItem('roadtrip_navmode'); if (sm === 'ess' || sm === 'all') navMode = sm; } catch(e) {}
 
-      // Liste à plat des onglets visibles — UNE seule barre, dans l'ordre des groupes.
-      // En mode Essentiel : seulement les onglets t.ess (+ l'onglet courant s'il a été
-      // ouvert via la recherche, pour ne pas le faire disparaître sous les pieds).
-      function visibleTabs() {
-        const out = [];
-        NAV.forEach(g => g.tabs.forEach(t => {
-          if (navMode === 'all' || t.ess || t.id === currentTab) out.push(t);
-        }));
-        return out;
-      }
+      // Visibilité d'un onglet — en mode Essentiel : seulement les onglets t.ess
+      // (+ l'onglet courant s'il a été ouvert via la recherche, pour ne pas le
+      // faire disparaître sous les pieds).
+      function tabVisible(t) { return navMode === 'all' || t.ess || t.id === currentTab; }
       function firstEssentialTab() {
         for (const g of NAV) for (const t of g.tabs) if (t.ess) return t.id;
         return NAV[0].tabs[0].id;
@@ -2565,9 +2586,18 @@
       function buildNav() {
         const modeOn = navMode === 'ess';
         const modeBtn = `<button class="nav-mode" id="nav-mode" title="${modeOn ? 'Afficher tous les onglets' : "N'afficher que l'essentiel"}"><span>${modeOn ? '\u2728' : '\uD83E\uDDE9'}</span><span class="nm-txt">${modeOn ? 'Essentiel' : 'Tout'}</span></button>`;
-        subnavEl.innerHTML = visibleTabs().map(t =>
-          `<button class="subtab${t.id === currentTab ? ' active' : ''}" data-tab="${t.id}"><span>${t.icon}</span> ${t.label}</button>`
-        ).join('') +
+        // Onglets groupés : les étiquettes .nav-grp n'apparaissent que dans la
+        // barre latérale (ordinateur) ; sur mobile la barre reste une rangée plate.
+        let tabsHtml = '';
+        NAV.forEach(g => {
+          const tabs = g.tabs.filter(tabVisible);
+          if (!tabs.length) return;
+          tabsHtml += `<div class="nav-grp">${g.icon} ${g.label}</div>`;
+          tabsHtml += tabs.map(t =>
+            `<button class="subtab${t.id === currentTab ? ' active' : ''}" data-tab="${t.id}"><span>${t.icon}</span> ${t.label}</button>`
+          ).join('');
+        });
+        subnavEl.innerHTML = tabsHtml +
           `<div class="subnav-right">${modeBtn}<button class="nav-search" id="nav-search" title="Rechercher (Ctrl/Cmd + K)"><span>🔎</span><span class="ns-label">Aller à…</span> <kbd>Ctrl K</kbd></button></div>`;
         subnavEl.querySelectorAll('.subtab').forEach(b =>
           b.addEventListener('click', () => showTab(b.dataset.tab)));
