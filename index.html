@@ -468,6 +468,47 @@
       .cd-journey .cj-pill b { color:var(--text); }
       .cd-journey .cj-edit { margin-top:10px; width:100%; background:rgba(245,158,11,0.12); border:1px solid rgba(245,158,11,0.32); color:var(--accent); border-radius:10px; padding:9px 12px; cursor:pointer; font-family:inherit; font-size:.78rem; font-weight:700; transition:background .18s, border-color .18s; }
       .cd-journey .cj-edit:hover { background:rgba(245,158,11,0.2); border-color:rgba(245,158,11,0.55); }
+      /* ── Préparation intelligente (score + checklist + météo) ─── */
+      .iq-card { background:linear-gradient(135deg, rgba(20,184,166,0.14), rgba(59,130,246,0.09) 55%, rgba(99,102,241,0.08)); border:1px solid rgba(20,184,166,0.32); position:relative; overflow:hidden; }
+      .iq-card::before { content:''; position:absolute; right:-50px; top:-50px; width:200px; height:200px; border-radius:50%; background:radial-gradient(circle, rgba(20,184,166,0.2), transparent 70%); pointer-events:none; }
+      .iq-top { display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+      .iq-ring { flex:none; width:112px; height:112px; position:relative; }
+      .iq-ring svg { width:112px; height:112px; transform:rotate(-90deg); }
+      .iq-ring .iq-track { fill:none; stroke:var(--border); stroke-width:9; }
+      .iq-ring .iq-arc { fill:none; stroke-width:9; stroke-linecap:round; transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1), stroke .4s; }
+      .iq-ring .iq-c { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+      .iq-ring .iq-pct { font-size:1.7rem; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; }
+      .iq-ring .iq-pl { font-size:.6rem; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-top:3px; }
+      .iq-head { flex:1; min-width:180px; }
+      .iq-head h2 { margin:0 0 4px; }
+      .iq-brief { font-size:.86rem; color:var(--text); line-height:1.5; }
+      .iq-brief b { color:#5eead4; }
+      .iq-cta { margin-top:9px; display:inline-flex; align-items:center; gap:7px; font-size:.8rem; font-weight:700; padding:8px 14px; border-radius:10px; border:1px solid rgba(20,184,166,0.4); background:rgba(20,184,166,0.12); color:#5eead4; cursor:pointer; font-family:inherit; transition:all .16s; }
+      .iq-cta:hover { background:rgba(20,184,166,0.2); border-color:rgba(20,184,166,0.6); transform:translateY(-1px); }
+      .iq-checks { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:8px; margin-top:15px; }
+      .iq-chk { display:flex; gap:10px; align-items:flex-start; text-align:left; background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:10px 12px; cursor:pointer; font-family:inherit; transition:border-color .15s, transform .1s; }
+      .iq-chk:hover { border-color:var(--border-strong); transform:translateY(-1px); }
+      .iq-chk:disabled { cursor:default; opacity:.9; }
+      .iq-chk .ic-s { flex:none; width:22px; height:22px; border-radius:50%; display:grid; place-items:center; font-size:.8rem; font-weight:800; margin-top:1px; }
+      .iq-chk.ok .ic-s { background:rgba(34,197,94,0.18); color:#86efac; }
+      .iq-chk.warn .ic-s { background:rgba(245,158,11,0.18); color:#fcd34d; }
+      .iq-chk.todo .ic-s { background:rgba(239,68,68,0.16); color:#fca5a5; }
+      .iq-chk .ic-m { min-width:0; }
+      .iq-chk .ic-t { font-size:.85rem; font-weight:700; color:var(--text); line-height:1.25; }
+      .iq-chk .ic-d { font-size:.74rem; color:var(--muted); line-height:1.35; margin-top:2px; }
+      .iq-chk.ok .ic-t::after { content:' ✓'; color:#86efac; }
+      .iq-wx { margin-top:15px; }
+      .iq-wx-h { font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); font-weight:800; margin-bottom:9px; display:flex; align-items:center; gap:8px; }
+      .iq-wx-strip { display:flex; gap:8px; flex-wrap:wrap; }
+      .iq-wx-day { flex:1 1 0; min-width:74px; background:var(--bg2); border:1px solid var(--border); border-radius:11px; padding:9px 6px; text-align:center; }
+      .iq-wx-day.rain { border-color:rgba(56,189,248,0.4); background:rgba(56,189,248,0.08); }
+      .iq-wx-day.hot { border-color:rgba(249,115,22,0.4); background:rgba(249,115,22,0.08); }
+      .iq-wx-dl { font-size:.66rem; color:var(--muted); text-transform:uppercase; letter-spacing:.03em; }
+      .iq-wx-e { font-size:1.35rem; line-height:1.2; margin:3px 0; }
+      .iq-wx-t { font-size:.82rem; font-weight:800; color:var(--text); font-variant-numeric:tabular-nums; }
+      .iq-wx-r { font-size:.66rem; color:#7dd3fc; margin-top:2px; }
+      .iq-wx-note { font-size:.78rem; color:var(--muted); display:flex; align-items:center; gap:8px; }
+      .iq-spin { width:15px; height:15px; border-radius:50%; border:2px solid rgba(20,184,166,0.3); border-top-color:#2dd4bf; animation:discoSpin .7s linear infinite; flex:none; }
       /* ── Phrasebook ─────────────────────────────────────── */
       .lang-pills { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
       .lang-pill { background:var(--bg2); border:1px solid var(--border); color:var(--muted); padding:8px 15px; border-radius:22px; cursor:pointer; font-size:.85rem; font-weight:600; transition:all .18s; font-family:inherit; }
@@ -1359,6 +1400,23 @@
         <div class="card countdown-card">
           <div id="cd-display"></div>
           <div id="cd-journey" class="cd-journey"></div>
+        </div>
+
+        <!-- Préparation intelligente : score de préparation + checklist + météo -->
+        <div class="card iq-card" id="iq-card" style="display:none">
+          <div class="iq-top">
+            <div class="iq-ring" id="iq-ring"></div>
+            <div class="iq-head">
+              <h2>🧠 Préparation intelligente</h2>
+              <div class="iq-brief" id="iq-brief"></div>
+              <button type="button" class="iq-cta" id="iq-cta" style="display:none"></button>
+            </div>
+          </div>
+          <div class="iq-checks" id="iq-checks"></div>
+          <div class="iq-wx" id="iq-wx" style="display:none">
+            <div class="iq-wx-h">🌤️ Météo de ta fenêtre de départ · <span id="iq-wx-city"></span></div>
+            <div class="iq-wx-strip" id="iq-wx-strip"></div>
+          </div>
         </div>
 
         <!-- ÉTAPE 3 — choisir son voyage (segmenté : prêts / sur-mesure) -->
@@ -3032,7 +3090,7 @@
         }
         return false;
       }
-      document.getElementById('generateBtn').addEventListener('click', () => generatePlan());
+      document.getElementById('generateBtn').addEventListener('click', async () => { await generatePlan(); try { renderReadiness(); } catch(e){} });
       // Bouton « Générer maintenant » des onglets vides → génère sans changer d'onglet.
       window.genPlanNow = async (ev) => {
         const b = ev && ev.currentTarget; let prev;
@@ -3051,6 +3109,7 @@
           if(e) e.style.display = '';
           if(c) c.style.display = 'none';
         });
+        try { renderReadiness(); } catch(e){}
       });
 
       // ── Render helpers ────────────────────────────────────────────
@@ -5386,22 +5445,23 @@
         // Bascule segmentée : « Itinéraires prêts » ⇄ « Sur-mesure » ⇄ « Manuel »
         const sw = document.getElementById('prep-switch');
         if (sw){
-          sw.querySelectorAll('[data-pane]').forEach(b => b.addEventListener('click', () => {
-            sw.querySelectorAll('[data-pane]').forEach(x => x.classList.remove('on'));
-            b.classList.add('on');
-            const pane = b.dataset.pane;
-            const pp = document.getElementById('prep-pane-presets');
-            const pc = document.getElementById('prep-pane-custom');
-            const pm = document.getElementById('prep-pane-manual');
-            if (pp) pp.hidden = pane !== 'presets';
-            if (pc) pc.hidden = pane !== 'custom';
-            if (pm) pm.hidden = pane !== 'manual';
-            if (pane === 'presets'){ try { renderCfgPresets(_presetZone); } catch(e){} }
-          }));
+          sw.querySelectorAll('[data-pane]').forEach(b => b.addEventListener('click', () => switchPrepPane(b.dataset.pane)));
         }
         _cfgInit = true;
       }
       window.initConfigurator = initConfigurator;
+      // Bascule (et synchronise le segment) vers un pane donné : presets / custom / manual.
+      function switchPrepPane(pane){
+        const sw = document.getElementById('prep-switch');
+        if (sw) sw.querySelectorAll('[data-pane]').forEach(x => x.classList.toggle('on', x.dataset.pane === pane));
+        const pp = document.getElementById('prep-pane-presets');
+        const pc = document.getElementById('prep-pane-custom');
+        const pm = document.getElementById('prep-pane-manual');
+        if (pp) pp.hidden = pane !== 'presets';
+        if (pc) pc.hidden = pane !== 'custom';
+        if (pm) pm.hidden = pane !== 'manual';
+        if (pane === 'presets'){ try { renderCfgPresets(_presetZone); } catch(e){} }
+      }
 
       // ── Init (différé via setTimeout 0) ───────────────────────────
       // Exécuté APRÈS l'évaluation complète du script : toutes les données
@@ -5452,6 +5512,7 @@
             btn.classList.toggle('on');
             btn.setAttribute('aria-pressed', btn.classList.contains('on'));
             _cpickSync(next);
+            try { renderReadiness(); } catch(e){}
           });
         });
         _cpickSync(sel);
@@ -8383,6 +8444,7 @@
       function renderJourney(){
         refreshReturnUI();
         try { renderTodayCard(); } catch(e){}
+        try { renderReadiness(); } catch(e){}
         const box = document.getElementById('cd-journey');
         if (!box) return;
         const r = chosenReturnRoute();
@@ -8527,6 +8589,169 @@
           return data;
         } catch(e){ return null; }
       }
+
+      // ══ Préparation intelligente : score + checklist + météo départ ══════
+      // Analyse l'état RÉEL du voyage (dates, rythme vs confort pilote, marge de
+      // jours, pays, visites, profil, autonomie) et en tire un score de préparation
+      // + une checklist actionnable (chaque item amène au bon réglage). Ajoute la
+      // météo de la fenêtre de départ (Open-Meteo). Se cache pendant le voyage
+      // (le tableau de bord « Aujourd'hui » prend le relais).
+      function readinessChecks(){
+        const checks = [];
+        // 1) Dates départ + retour.
+        const hasDep = !!(_cdDate && _cdDate.value);
+        const ret = (typeof getReturnDate === 'function') ? getReturnDate() : null;
+        checks.push({
+          key:'dates', w:25, state: hasDep && ret ? 'ok' : (hasDep ? 'warn' : 'todo'),
+          t:'Dates du voyage', d: hasDep && ret ? 'Départ et retour définis' : (hasDep ? 'Retour à confirmer' : 'Choisis ta date de départ'),
+          act:() => { const el = document.getElementById('cd-date'); if (el){ el.scrollIntoView({ behavior:'smooth', block:'center' }); el.focus(); } }
+        });
+        let tp = null; try { tp = computeTripPlan(); } catch(e){}
+        // 2) Rythme tenable (km/jour vs confort).
+        if (tp){
+          const st = tp.level === 'ok' ? 'ok' : (tp.level === 'warn' ? 'warn' : 'todo');
+          checks.push({
+            key:'pace', w:20, state:st,
+            t:'Rythme tenable', d:`~${tp.kmPerDay.toLocaleString('fr-FR')} km/j sur ${tp.ridingDays} j — ${tp.msg} (confort ${tp.maxKm} km/j)`,
+            act:() => showTab('return')
+          });
+          // 3) Marge de jours (souplesse).
+          const sp = tp.spareDays;
+          checks.push({
+            key:'margin', w:10, state: sp >= 1 ? 'ok' : 'warn',
+            t:'Marge de jours', d: sp >= 1 ? `${sp} jour${sp>1?'s':''} de battement` : 'Planning serré — aucune journée tampon',
+            act:() => showTab('return')
+          });
+        }
+        // 4) Pays de l'itinéraire.
+        let cc = []; try { cc = _cpickGet(); } catch(e){}
+        checks.push({
+          key:'countries', w:10, state: cc.length >= 2 ? 'ok' : 'warn',
+          t:'Pays traversés', d: cc.length >= 2 ? `${cc.length} pays cochés` : 'Coche les pays de ta route',
+          act:() => { switchPrepPane('manual'); const el = document.getElementById('country-pick'); if (el) el.scrollIntoView({ behavior:'smooth', block:'center' }); }
+        });
+        // 5) Visites sélectionnées.
+        let poi = []; try { poi = getPoiSel(); } catch(e){}
+        checks.push({
+          key:'poi', w:15, state: poi.length >= 1 ? 'ok' : 'warn',
+          t:'Lieux à voir', d: poi.length >= 1 ? `${poi.length} visite${poi.length>1?'s':''} au programme` : 'Ajoute des visites (onglet À voir)',
+          act:() => showTab('poi')
+        });
+        // 6) Profil pilote renseigné.
+        let piloteSet = false; try { piloteSet = !!localStorage.getItem('roadtrip_pilote'); } catch(e){}
+        checks.push({
+          key:'pilote', w:10, state: piloteSet ? 'ok' : 'warn',
+          t:'Profil pilote', d: piloteSet ? 'Confort personnalisé' : 'Renseigne ton profil (pauses, km/j)',
+          act:() => showTab('pilote')
+        });
+        // 7) Autonomie vs plus longue étape.
+        let range = 250; try { range = bikeUsableRangeKm(); } catch(e){}
+        let longest = 0; for (let i = 1; i < ROUTE_WP.length; i++) longest = Math.max(longest, ROUTE_WP[i].km || 0);
+        checks.push({
+          key:'fuel', w:10, state: longest <= range ? 'ok' : 'warn',
+          t:'Autonomie essence', d: longest <= range ? `Plus longue étape ${longest} km ≤ ${range} km` : `Étape de ${longest} km > autonomie ${range} km — prévois un plein`,
+          act:() => showTab('fuel')
+        });
+        const total = checks.reduce((s,c) => s + c.w, 0) || 1;
+        const got = checks.reduce((s,c) => s + c.w * (c.state === 'ok' ? 1 : c.state === 'warn' ? 0.5 : 0), 0);
+        const score = Math.round(got / total * 100);
+        return { checks, score, tp };
+      }
+      function iqRingSvg(score){
+        const R = 48, C = 2 * Math.PI * R;
+        const off = C * (1 - score / 100);
+        const col = score >= 80 ? '#22c55e' : score >= 55 ? '#f59e0b' : '#ef4444';
+        return `<svg viewBox="0 0 112 112"><circle class="iq-track" cx="56" cy="56" r="${R}"/>
+          <circle class="iq-arc" cx="56" cy="56" r="${R}" stroke="${col}" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}"/></svg>
+          <div class="iq-c"><div class="iq-pct" style="color:${col}">${score}<small style="font-size:.9rem">%</small></div><div class="iq-pl">prêt</div></div>`;
+      }
+      let _iqWxKey = null;
+      function renderReadiness(){
+        const card = document.getElementById('iq-card');
+        if (!card) return;
+        // Pendant le voyage, on laisse la place au tableau de bord « Aujourd'hui ».
+        let onTrip = false; try { onTrip = !!computeTodayInfo(); } catch(e){}
+        if (onTrip){ card.style.display = 'none'; return; }
+        card.style.display = '';
+        const { checks, score } = readinessChecks();
+        document.getElementById('iq-ring').innerHTML = iqRingSvg(score);
+        // Briefing + action prioritaire (1er item non-ok, le plus lourd).
+        const weak = checks.filter(c => c.state !== 'ok').sort((a,b) => b.w - a.w);
+        const brief = document.getElementById('iq-brief');
+        const cta = document.getElementById('iq-cta');
+        if (!weak.length){
+          brief.innerHTML = `Tout est au vert — ton voyage est <b>fin prêt</b>. Il ne reste qu'à rouler ! 🏍️`;
+          cta.style.display = 'none';
+        } else {
+          const top = weak[0];
+          const lbl = score >= 80 ? 'Presque prêt' : score >= 55 ? 'Bien avancé' : 'À compléter';
+          brief.innerHTML = `<b>${lbl}.</b> Priorité : <b>${famEsc(top.t.toLowerCase())}</b> — ${famEsc(top.d)}.`;
+          cta.style.display = '';
+          cta.innerHTML = '➡️ ' + famEsc(top.t);
+          cta.onclick = top.act;
+        }
+        // Checklist.
+        document.getElementById('iq-checks').innerHTML = checks.map((c, i) => {
+          const mark = c.state === 'ok' ? '✓' : c.state === 'warn' ? '!' : '○';
+          return `<button type="button" class="iq-chk ${c.state}" data-i="${i}">
+            <span class="ic-s">${mark}</span>
+            <span class="ic-m"><span class="ic-t">${famEsc(c.t)}</span><span class="ic-d">${famEsc(c.d)}</span></span>
+          </button>`;
+        }).join('');
+        const box = document.getElementById('iq-checks');
+        if (!box.dataset.init){
+          box.dataset.init = '1';
+          box.addEventListener('click', e => {
+            const b = e.target.closest('.iq-chk'); if (!b) return;
+            const list = readinessChecks().checks;
+            const c = list[+b.dataset.i];
+            if (c && c.act) c.act();
+          });
+        }
+        renderReadinessWx();
+      }
+      // Météo de la fenêtre de départ (ville de départ, jours suivant le départ).
+      async function renderReadinessWx(){
+        const wrap = document.getElementById('iq-wx');
+        const strip = document.getElementById('iq-wx-strip');
+        if (!wrap || !strip) return;
+        if (!_cdDate || !_cdDate.value){ wrap.style.display = 'none'; return; }
+        const origin = ROUTE_WP[0];
+        const dep = new Date(`${_cdDate.value}T00:00`);
+        const today = new Date(); today.setHours(0,0,0,0);
+        const ahead = Math.round((dep - today) / 86400000);
+        document.getElementById('iq-wx-city').textContent = origin.flag + ' ' + origin.name;
+        wrap.style.display = '';
+        if (ahead > 15){ strip.innerHTML = `<div class="iq-wx-note">📅 Départ dans ${ahead} j — la météo se précisera à ~15 jours. Reviens plus tard pour l'anticiper.</div>`; return; }
+        if (ahead < -1){ wrap.style.display = 'none'; return; }
+        const key = origin.lat.toFixed(2) + ',' + _cdDate.value;
+        _iqWxKey = key;
+        strip.innerHTML = `<div class="iq-wx-note"><span class="iq-spin"></span>Prévision pour ta fenêtre de départ…</div>`;
+        try {
+          const start = new Date(Math.max(dep, today));
+          const ds = start.toISOString().slice(0, 10);
+          const end = new Date(start); end.setDate(end.getDate() + 3);
+          const de = end.toISOString().slice(0, 10);
+          const u = `https://api.open-meteo.com/v1/forecast?latitude=${origin.lat.toFixed(3)}&longitude=${origin.lng.toFixed(3)}&daily=weathercode,temperature_2m_max,precipitation_probability_max&timezone=auto&start_date=${ds}&end_date=${de}`;
+          const r = await fetch(u);
+          const j = await r.json();
+          if (_iqWxKey !== key) return; // départ changé entretemps
+          const d = j.daily;
+          if (!d || !d.time || !d.time.length){ wrap.style.display = 'none'; return; }
+          strip.innerHTML = d.time.map((t, i) => {
+            const dt = new Date(t + 'T12:00');
+            const dl = dt.toLocaleDateString('fr-FR', { weekday:'short', day:'numeric' });
+            const code = d.weathercode[i], tmax = Math.round(d.temperature_2m_max[i]), rain = d.precipitation_probability_max[i];
+            const cls = rain >= 50 ? 'rain' : (tmax >= 30 ? 'hot' : '');
+            return `<div class="iq-wx-day ${cls}"><div class="iq-wx-dl">${i === 0 ? '🏁 ' : ''}${famEsc(dl)}</div>
+              <div class="iq-wx-e">${WX_EMOJI(code)}</div><div class="iq-wx-t">${tmax}°</div>
+              <div class="iq-wx-r">💧 ${rain}%</div></div>`;
+          }).join('');
+        } catch(e){
+          if (_iqWxKey === key) strip.innerHTML = `<div class="iq-wx-note">⚠️ Météo indisponible pour le moment — réessaie plus tard.</div>`;
+        }
+      }
+
       function renderTodayCard(){
         const box = document.getElementById('today-card');
         if (!box) return;
