@@ -288,6 +288,32 @@
       .leaflet-popup-content-wrapper { background:var(--bg2)!important; color:var(--text)!important; border:1px solid var(--border)!important; border-radius:12px!important; box-shadow:0 6px 24px rgba(0,0,0,0.55)!important; }
       .leaflet-popup-tip-container .leaflet-popup-tip { background:var(--bg2)!important; }
       .leaflet-container { font-family:inherit!important; background:var(--bg2)!important; }
+      /* ── Carte intelligente : calques + analyse ─────────── */
+      .smap { margin-bottom:12px; }
+      .smap-layers { display:flex; flex-wrap:wrap; gap:7px; margin-bottom:10px; }
+      .smap-tgl { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:999px; border:1px solid var(--border); background:var(--bg2); color:var(--muted); font-size:.79rem; font-weight:600; font-family:inherit; cursor:pointer; transition:all .15s; user-select:none; }
+      .smap-tgl:hover { color:var(--text); border-color:var(--border-strong); }
+      .smap-tgl .st-dot { width:9px; height:9px; border-radius:50%; background:currentColor; opacity:.35; transition:opacity .15s; }
+      .smap-tgl.on { color:var(--text); }
+      .smap-tgl.on .st-dot { opacity:1; box-shadow:0 0 6px currentColor; }
+      .smap-tgl.on.l-poi { border-color:rgba(249,115,22,0.6); background:rgba(249,115,22,0.1); color:#fdba74; }
+      .smap-tgl.on.l-honda { border-color:rgba(226,7,30,0.55); background:rgba(226,7,30,0.1); color:#fca5a5; }
+      .smap-tgl.on.l-fuel { border-color:rgba(59,130,246,0.55); background:rgba(59,130,246,0.1); color:#93c5fd; }
+      .smap-tgl.on.l-weather { border-color:rgba(56,189,248,0.55); background:rgba(56,189,248,0.1); color:#7dd3fc; }
+      .smap-insights { display:grid; grid-template-columns:repeat(auto-fit, minmax(148px, 1fr)); gap:8px; }
+      .smap-ins { display:flex; align-items:center; gap:9px; background:var(--bg2); border:1px solid var(--border); border-radius:12px; padding:9px 11px; }
+      .smap-ins.warn { border-color:rgba(249,115,22,0.4); background:rgba(249,115,22,0.08); }
+      .smap-ins.alert { border-color:rgba(239,68,68,0.42); background:rgba(239,68,68,0.08); }
+      .si-ic { font-size:1.15rem; line-height:1; flex-shrink:0; }
+      .si-main { min-width:0; }
+      .si-v { font-size:.94rem; font-weight:800; color:var(--text); font-variant-numeric:tabular-nums; line-height:1.15; }
+      .si-l { font-size:.7rem; color:var(--muted); line-height:1.2; }
+      .smap-note { font-size:.76rem; color:var(--muted); margin-top:9px; display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+      .smap-spin { width:14px; height:14px; border-radius:50%; border:2px solid rgba(56,189,248,0.3); border-top-color:#38bdf8; animation:discoSpin .7s linear infinite; flex-shrink:0; }
+      .fuel-marker { width:26px; height:26px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); background:linear-gradient(135deg,#60a5fa,#2563eb); border:2px solid rgba(255,255,255,0.92); box-shadow:0 2px 10px rgba(37,99,235,0.6); display:flex; align-items:center; justify-content:center; }
+      .fuel-marker span { transform:rotate(45deg); font-size:.82rem; line-height:1; }
+      .wx-marker { min-width:44px; height:26px; padding:0 6px; border-radius:14px; background:var(--bg2); border:1.5px solid rgba(56,189,248,0.55); box-shadow:0 2px 9px rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; gap:3px; font-size:.74rem; font-weight:700; color:var(--text); white-space:nowrap; }
+      .wx-marker .wx-e { font-size:.95rem; line-height:1; }
       /* ── Profil d'élévation ─────────────────────────────── */
       .elev-svg { width:100%; height:200px; display:block; }
       .elev-area { fill:url(#elevGrad); }
@@ -1853,6 +1879,16 @@
               <a class="btn btn-secondary" id="map-dir-btn" href="https://www.google.com/maps/dir/Troyes/Bruxelles/Berlin/Warszawa/Vilnius/Riga/Tallinn" target="_blank" style="padding:6px 12px;font-size:0.8rem;text-decoration:none;display:inline-block">🧭 Google</a>
               <button class="btn btn-secondary" id="map-apple-btn" type="button" onclick="scrollToDayRoutes()" style="padding:6px 12px;font-size:0.8rem">&#x1F34E; Plans par jour</button>
             </div>
+          </div>
+          <div class="smap" id="smap">
+            <div class="smap-layers" id="smap-layers">
+              <button type="button" class="smap-tgl l-poi" data-layer="poi"><span class="st-dot"></span>⭐ Visites</button>
+              <button type="button" class="smap-tgl l-honda" data-layer="honda"><span class="st-dot"></span>🔴 Honda</button>
+              <button type="button" class="smap-tgl l-fuel" data-layer="fuel"><span class="st-dot"></span>⛽ Pleins malins</button>
+              <button type="button" class="smap-tgl l-weather" data-layer="weather"><span class="st-dot"></span>🌦️ Météo étapes</button>
+            </div>
+            <div class="smap-insights" id="smap-insights"></div>
+            <div class="smap-note" id="smap-note"></div>
           </div>
           <div id="map"></div>
           <div id="map-waypoint-list" class="map-chips"></div>
@@ -7135,13 +7171,14 @@
 
         map.fitBounds(L.latLngBounds(latlngs), { padding:[20,20] });
 
-        // Marqueurs concessions Honda
+        // Marqueurs concessions Honda (calque activable)
+        window._hondaLayer = L.layerGroup();
         HONDA_POINTS.forEach(p => {
           const icon = L.divIcon({
             html: `<div class="honda-marker">H</div>`,
             className:'', iconSize:[24,24], iconAnchor:[12,12], popupAnchor:[0,-14]
           });
-          L.marker([p.lat, p.lng], { icon }).addTo(map)
+          L.marker([p.lat, p.lng], { icon }).addTo(window._hondaLayer)
             .bindPopup(`<strong style="font-size:0.95rem">${p.flag} Honda · ${p.city}</strong><br/>
               <span style="font-size:0.78rem;opacity:0.7">${p.note}</span><br/>
               <a href="${hondaUrl(p)}" target="_blank" style="font-size:0.78rem">🔍 Voir sur Google Maps</a>`);
@@ -7181,7 +7218,229 @@
         };
         window._refreshPoi();
 
+        // Calques intelligents (essence + météo) et panneau d'analyse.
+        window._fuelLayer = L.layerGroup();
+        window._wxLayer = L.layerGroup();
+        try { initSmartMap(map); } catch(e){}
+
         loadElevation();
+      }
+
+      // ══ Carte intelligente : pleins malins, météo d'étape, analyse ══════
+      // Tout est calculé côté client à partir de la route et des paramètres de
+      // préparation (réservoir, conso, réserve, dates). La météo vient d'Open-Meteo
+      // (gratuit, sans clé). Chaque calque est activable indépendamment.
+      const _SMAP_DEF = { poi:true, honda:true, fuel:false, weather:false };
+      function smapState(){
+        try { return Object.assign({}, _SMAP_DEF, JSON.parse(localStorage.getItem('roadtrip_smap') || '{}')); }
+        catch(e){ return Object.assign({}, _SMAP_DEF); }
+      }
+      function smapSave(s){ try { localStorage.setItem('roadtrip_smap', JSON.stringify(s)); } catch(e){} }
+
+      // Autonomie utile de la moto (km) depuis l'onglet Préparer.
+      function bikeUsableRangeKm(){
+        const tank = +(document.getElementById('f-tank') || {}).value || 18.1;
+        const conso = +(document.getElementById('f-conso') || {}).value || 5.8;
+        const reserve = Math.min(40, Math.max(0, +(document.getElementById('f-reserve') || {}).value || 22));
+        const full = (tank / conso) * 100;
+        return Math.max(60, Math.round(full * (1 - reserve / 100)));
+      }
+      // Km cumulés à chaque waypoint (wp[0] = 0).
+      function mapCumKm(){ const c = []; let s = 0; ROUTE_WP.forEach(w => { s += (w.km || 0); c.push(s); }); return c; }
+      // Point (lat,lng) à un km cumulé donné, interpolé le long de la polyline.
+      function pointAtKm(targetKm, cum){
+        for (let i = 0; i < ROUTE_WP.length - 1; i++){
+          const a = ROUTE_WP[i], b = ROUTE_WP[i + 1];
+          if (targetKm >= cum[i] && targetKm <= cum[i + 1]){
+            const leg = cum[i + 1] - cum[i] || 1;
+            const f = (targetKm - cum[i]) / leg;
+            return { lat: a.lat + (b.lat - a.lat) * f, lng: a.lng + (b.lng - a.lng) * f, from: a, to: b };
+          }
+        }
+        const last = ROUTE_WP[ROUTE_WP.length - 1];
+        return { lat: last.lat, lng: last.lng, from: last, to: last };
+      }
+      // Pleins malins : la moto part pleine, refait le plein avant la réserve.
+      function planFuelStops(){
+        const cum = mapCumKm();
+        const total = cum[cum.length - 1] || 0;
+        const range = bikeUsableRangeKm();
+        const every = Math.max(60, range * 0.9); // marge de sécurité avant réserve
+        const stops = [];
+        for (let km = every, n = 1; km < total - 15; km += every, n++){
+          const p = pointAtKm(km, cum);
+          stops.push({ n, km: Math.round(km), lat: p.lat, lng: p.lng, near: p.to && p.to.name });
+        }
+        return { stops, range, every: Math.round(every), total };
+      }
+      function renderFuelLayer(){
+        const layer = window._fuelLayer; if (!layer || typeof L === 'undefined') return;
+        layer.clearLayers();
+        const plan = planFuelStops();
+        plan.stops.forEach(s => {
+          const icon = L.divIcon({ html:'<div class="fuel-marker"><span>⛽</span></div>', className:'', iconSize:[26,26], iconAnchor:[13,24], popupAnchor:[0,-22] });
+          const gm = `https://www.google.com/maps/search/station+essence/@${s.lat.toFixed(4)},${s.lng.toFixed(4)},13z`;
+          L.marker([s.lat, s.lng], { icon }).addTo(layer)
+            .bindPopup(`<div style="min-width:170px"><strong style="font-size:0.95rem">⛽ Plein n°${s.n}</strong><br/>
+              <span style="font-size:0.78rem;opacity:0.75">≈ km ${s.km.toLocaleString('fr-FR')} · vers ${famEsc(s.near || '—')}</span><br/>
+              <span style="font-size:0.74rem;color:#93c5fd">Autonomie utile ≈ ${plan.range} km — fais le plein avant la réserve.</span><br/>
+              <a href="${gm}" target="_blank" rel="noopener" style="font-size:0.78rem">🔍 Stations autour d'ici</a></div>`);
+        });
+        return plan;
+      }
+
+      // ── Météo par étape (WMO → emoji) ─────────────────────────────
+      function wxInfo(code){
+        const c = +code;
+        if (c === 0) return { e:'☀️', l:'Ciel clair', risk:0 };
+        if (c <= 2) return { e:'🌤️', l:'Éclaircies', risk:0 };
+        if (c === 3) return { e:'☁️', l:'Couvert', risk:0 };
+        if (c <= 48) return { e:'🌫️', l:'Brouillard', risk:1 };
+        if (c <= 57) return { e:'🌦️', l:'Bruine', risk:1 };
+        if (c <= 67) return { e:'🌧️', l:'Pluie', risk:2 };
+        if (c <= 77) return { e:'🌨️', l:'Neige', risk:3 };
+        if (c <= 82) return { e:'🌧️', l:'Averses', risk:2 };
+        if (c <= 86) return { e:'🌨️', l:'Averses de neige', risk:3 };
+        return { e:'⛈️', l:'Orages', risk:3 };
+      }
+      let _wxCache = null;
+      function mapDepDate(){
+        try { const dr = localStorage.getItem('roadtrip_departure'); if (dr){ const d = new Date(dr); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); } } catch(e){}
+        return null;
+      }
+      // Récupère la prévision au jour d'arrivée estimé de chaque étape.
+      async function fetchRouteWeather(force){
+        if (_wxCache && !force) return _wxCache;
+        const dep0 = mapDepDate();
+        const base = dep0 || new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate());
+        const today = new Date(); today.setHours(0,0,0,0);
+        const out = [];
+        for (let i = 0; i < ROUTE_WP.length; i++){
+          const wp = ROUTE_WP[i];
+          const day = new Date(base); day.setDate(day.getDate() + i); // ~1 étape/jour
+          const ahead = Math.round((day - today) / 86400000);
+          let wx = null;
+          if (ahead >= 0 && ahead <= 15){
+            const ds = day.toISOString().slice(0, 10);
+            try {
+              const u = `https://api.open-meteo.com/v1/forecast?latitude=${wp.lat.toFixed(3)}&longitude=${wp.lng.toFixed(3)}&daily=weathercode,temperature_2m_max,windspeed_10m_max,precipitation_sum&timezone=auto&start_date=${ds}&end_date=${ds}`;
+              const r = await fetch(u);
+              if (r.ok){
+                const j = await r.json(), d = j.daily || {};
+                if (d.weathercode && d.weathercode.length){
+                  wx = { code:d.weathercode[0], tmax:Math.round(d.temperature_2m_max[0]), wind:Math.round(d.windspeed_10m_max[0]), rain:d.precipitation_sum ? d.precipitation_sum[0] : 0, date:ds };
+                }
+              }
+            } catch(e){}
+          }
+          out.push({ wp, i, day, ahead, wx });
+        }
+        _wxCache = { list: out, dated: !!dep0 };
+        return _wxCache;
+      }
+      function renderWeatherLayer(data){
+        const layer = window._wxLayer; if (!layer || typeof L === 'undefined') return;
+        layer.clearLayers();
+        (data.list || []).forEach(o => {
+          if (!o.wx) return;
+          const w = wxInfo(o.wx.code);
+          const icon = L.divIcon({ html:`<div class="wx-marker"><span class="wx-e">${w.e}</span>${o.wx.tmax}°</div>`, className:'', iconSize:[46,26], iconAnchor:[23,32], popupAnchor:[0,-28] });
+          const rain = o.wx.rain != null ? `${o.wx.rain.toFixed(1).replace('.', ',')} mm` : '—';
+          L.marker([o.wp.lat, o.wp.lng], { icon }).addTo(layer)
+            .bindPopup(`<div style="min-width:180px"><strong style="font-size:0.95rem">${o.wp.flag} ${famEsc(o.wp.name)}</strong><br/>
+              <span style="font-size:0.78rem;opacity:0.8">${w.e} ${w.l} · ${o.wx.date}</span><br/>
+              <span style="font-size:0.76rem">🌡️ ${o.wx.tmax}° · 💨 ${o.wx.wind} km/h · 🌧️ ${rain}</span>
+              ${w.risk >= 2 ? '<br/><span style="font-size:0.74rem;color:#fca5a5">⚠️ Prévois la pluie : équipement + vigilance chaussée.</span>' : (o.wx.wind >= 45 ? '<br/><span style="font-size:0.74rem;color:#fdba74">💨 Vent fort — attention aux rafales latérales.</span>' : '')}
+            </div>`);
+        });
+      }
+
+      // ── Panneau d'analyse du parcours ─────────────────────────────
+      function renderMapInsights(){
+        const box = document.getElementById('smap-insights'); if (!box) return;
+        const cum = mapCumKm();
+        const total = cum[cum.length - 1] || 0;
+        const range = bikeUsableRangeKm();
+        // Plus longue étape.
+        let longest = { km:0, from:'', to:'' };
+        for (let i = 0; i < ROUTE_WP.length - 1; i++){
+          const k = ROUTE_WP[i + 1].km || 0;
+          if (k > longest.km) longest = { km:k, from:ROUTE_WP[i].name, to:ROUTE_WP[i + 1].name };
+        }
+        // Frontières (changements de drapeau) + pays distincts.
+        let borders = 0; const flags = new Set();
+        ROUTE_WP.forEach((w, i) => { flags.add(w.flag); if (i && w.flag !== ROUTE_WP[i - 1].flag) borders++; });
+        // Temps de selle (~78 km/h de moyenne autoroute/nationale).
+        const rideH = total / 78;
+        // Pleins estimés.
+        const fuel = planFuelStops();
+        // Dénivelé visible (si le profil est déjà chargé).
+        let elevTxt = '—', elevSub = 'charge le profil';
+        if (_elevCache && _elevCache.elev && _elevCache.elev.length){
+          const e = _elevCache.elev, mn = Math.min(...e), mx = Math.max(...e);
+          elevTxt = Math.round(mx - mn) + ' m'; elevSub = `${Math.round(mn)}→${Math.round(mx)} m`;
+        }
+        const cards = [];
+        cards.push({ ic:'📏', v:total.toLocaleString('fr-FR') + ' km', l:`${ROUTE_WP.length - 1} étapes · ${flags.size} pays` });
+        cards.push({ ic:'⏱️', v:'~' + rideH.toFixed(1).replace('.', ',') + ' h', l:'temps de selle estimé' });
+        const longWarn = longest.km > range;
+        cards.push({ ic:'🛣️', v:longest.km + ' km', l:`plus longue étape · ${famEsc(longest.to)}`, cls: longWarn ? 'warn' : '' });
+        cards.push({ ic:'⛽', v:fuel.stops.length + ' plein' + (fuel.stops.length > 1 ? 's' : ''), l:`autonomie ~${range} km`, cls: longWarn ? 'warn' : '' });
+        cards.push({ ic:'🛂', v:borders + ' frontière' + (borders > 1 ? 's' : ''), l:'passages de pays' });
+        cards.push({ ic:'⛰️', v:elevTxt, l:elevSub });
+        // Carte météo (remplie après fetch).
+        if (_wxCache){
+          const worst = (_wxCache.list || []).reduce((m, o) => o.wx ? Math.max(m, wxInfo(o.wx.code).risk) : m, 0);
+          const anyWind = (_wxCache.list || []).some(o => o.wx && o.wx.wind >= 45);
+          const lbl = worst >= 3 ? 'orages/neige possibles' : worst === 2 ? 'pluie sur le parcours' : anyWind ? 'vent fort par endroits' : 'globalement clément';
+          const ic = worst >= 2 ? '🌧️' : anyWind ? '💨' : '🌤️';
+          cards.push({ ic, v:'Météo', l:lbl, cls: worst >= 2 ? 'alert' : (anyWind ? 'warn' : '') });
+        }
+        box.innerHTML = cards.map(c =>
+          `<div class="smap-ins ${c.cls || ''}"><span class="si-ic">${c.ic}</span><div class="si-main"><div class="si-v">${c.v}</div><div class="si-l">${c.l}</div></div></div>`
+        ).join('');
+      }
+      function smapNote(html, spin){
+        const el = document.getElementById('smap-note'); if (!el) return;
+        el.innerHTML = html ? ((spin ? '<span class="smap-spin"></span>' : '') + '<span>' + html + '</span>') : '';
+      }
+
+      // ── Calques + activation ──────────────────────────────────────
+      function smapLayerRef(name){
+        return { poi:window._poiLayer, honda:window._hondaLayer, fuel:window._fuelLayer, weather:window._wxLayer }[name];
+      }
+      async function applySmapLayer(name, on){
+        const map = window._map; if (!map) return;
+        const layer = smapLayerRef(name); if (!layer) return;
+        const btn = document.querySelector(`.smap-tgl[data-layer="${name}"]`);
+        if (btn) btn.classList.toggle('on', on);
+        if (name === 'fuel' && on) renderFuelLayer();
+        if (name === 'weather' && on){
+          smapNote('Récupération de la météo par étape…', true);
+          try {
+            const data = await fetchRouteWeather(false);
+            renderWeatherLayer(data);
+            renderMapInsights();
+            smapNote(data.dated ? '🌦️ Météo au jour d\'arrivée estimé de chaque étape (Open-Meteo).' : '🌦️ Dates non définies — prévision indicative jour par jour. Renseigne ta date de départ pour l\'aligner.');
+          } catch(e){ smapNote('⚠️ Météo indisponible pour le moment — réessaie plus tard.'); }
+        }
+        if (on) layer.addTo(map); else { map.removeLayer(layer); if (name === 'weather') smapNote(''); }
+      }
+      function initSmartMap(){
+        const wrap = document.getElementById('smap-layers');
+        const st = smapState();
+        // Restaure l'état de chaque calque.
+        Object.keys(_SMAP_DEF).forEach(name => { applySmapLayer(name, !!st[name]); });
+        if (wrap && !wrap.dataset.init){
+          wrap.dataset.init = '1';
+          wrap.addEventListener('click', e => {
+            const b = e.target.closest('.smap-tgl'); if (!b) return;
+            const name = b.dataset.layer;
+            const s = smapState(); const on = !s[name]; s[name] = on; smapSave(s);
+            applySmapLayer(name, on);
+          });
+        }
+        renderMapInsights();
       }
 
       // ── Liste concessions Honda ───────────────────────────────────
@@ -7318,6 +7577,7 @@
         hit.addEventListener('mouseleave', leave);
         hit.addEventListener('touchmove', move, {passive:true});
         hit.addEventListener('touchend', leave);
+        try { renderMapInsights(); } catch(e){}
       }
 
       // ── Planner ───────────────────────────────────────────────────
